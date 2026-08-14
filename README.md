@@ -59,12 +59,14 @@
 
 ---
 
-## 4. 🛠️ 기술 스택 (Tech Stack)
+## 4. 🛠️ 기술 스택 및 배포 인프라 (Tech Stack & Infra)
 
-* **Frontend**: React, Vite, TypeScript, TailwindCSS / CSS Modules, Lucide React
-* **Backend**: Node.js (Express/NestJS) 또는 Python (FastAPI), OpenAI API (`gpt-4o-mini`)
-* **Database**: PostgreSQL (Supabase / Neon) 또는 Firebase Firestore
-* **Deployment**: Vercel (FE), Render / Fly.io (BE), GitHub Actions (CI)
+* **Frontend**: React 18, Vite, Lucide React, Pretendard
+* **Backend**: **Spring Boot 3.3 (Java 17, Gradle)**, Spring Web, Spring Data JPA, Lombok
+* **AI Engine**: **OpenAI API (`gpt-4o-mini`)** (JSON Schema Structured Outputs)
+* **Cloud & Server**: **가비아 클라우드 서버 (Gabia Cloud)** (Docker 컨테이너 또는 JAR 직접 실행), Nginx (Reverse Proxy & SSL)
+* **Database**: MySQL / PostgreSQL (가비아 클라우드 연동 DB)
+* **Collaboration**: GitHub Monorepo (`develop`, `feat/*` 브랜치 전략)
 
 ---
 
