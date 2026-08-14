@@ -32,8 +32,11 @@
 * [x] **백엔드 서버 프레임워크**: **Spring Boot 3.3.3 (Java 17, Gradle)**
 * [x] **서버 호스팅 환경**: **가비아 클라우드 서버 (Gabia Cloud)**
   * 배포 방식: `Dockerfile` 기반 멀티스테이지 경량 컨테이너 실행
-  * 내부 포트: `8080`
+  * 포트 및 웹서버: Nginx (80/443 포트 SSL) ➔ Spring Boot (내부 `8080` 포트) 리버스 프록시
 * [x] **데이터베이스**: MySQL / PostgreSQL (가비아 클라우드 연동 DB)
+* [x] **🧠 백엔드 A (AI) ↔ ⚙️ 백엔드 B (DB) 데이터 연동 규격**:
+  * **프롬프트 주입 포맷**: 백엔드 B의 DB 데이터를 백엔드 A의 AI 프롬프트에 넘길 때 `[팀 용어집 규칙] {term} -> {rule} ({note})` 형식의 문자열로 결합
+  * **LLM 장애 폴백 룰**: OpenAI API 호출 실패 시 1회 즉시 재시도 ➔ 재실패 시 서비스 중단을 막기 위해 [API_CONTRACT.md](API_CONTRACT.md)의 Mock 안전 템플릿으로 자동 폴백하여 프론트에 `200 OK` 응답
 * [x] **환경변수 기본 템플릿 (`application.yml`)**:
   ```yaml
   server:
