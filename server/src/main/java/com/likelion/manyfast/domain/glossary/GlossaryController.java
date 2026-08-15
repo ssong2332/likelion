@@ -1,34 +1,60 @@
 package com.likelion.manyfast.domain.glossary;
 
+import com.likelion.manyfast.domain.glossary.dto.GlossaryRequest;
+import com.likelion.manyfast.domain.glossary.dto.GlossaryResponse;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import java.util.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/glossaries")
+@RequiredArgsConstructor
 public class GlossaryController {
 
-    private final List<Map<String, Object>> glossaries = new ArrayList<>(List.of(
-            Map.of("id", "1", "term", "Manyfast", "rule", "원문 유지 (Keep Original)", "note", "의역 금지"),
-            Map.of("id", "2", "term", "ASAP", "rule", "오늘 EOD 18:00 전", "note", "팀 내 합의 기준")
-    ));
+    private final GlossaryService glossaryService;
 
     @GetMapping
-    public ResponseEntity<Map<String, Object>> getGlossaries() {
-        return ResponseEntity.ok(Map.of("data", glossaries));
+    public ResponseEntity<Map<String, List<GlossaryResponse>>> getGlossaries() {
+        return ResponseEntity.ok(Map.of("data", glossaryService.findAll()));
     }
 
     @PostMapping
-    public ResponseEntity<Map<String, Object>> createGlossary(@RequestBody Map<String, Object> request) {
-        Map<String, Object> newEntry = new HashMap<>(request);
-        newEntry.put("id", String.valueOf(System.currentTimeMillis()));
-        glossaries.add(newEntry);
-        return ResponseEntity.status(201).body(Map.of("data", newEntry));
+    public ResponseEntity<Map<String, GlossaryResponse>> createGlossary(
+            @Valid @RequestBody GlossaryRequest request
+    ) {
+        return ResponseEntity.status(201).body(Map.of("data", glossaryService.create(request)));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Map<String, GlossaryResponse>> updateGlossary(
+            @PathVariable Long id,
+            @Valid @RequestBody GlossaryRequest request
+    ) {
+        validatePositiveId(id);
+        return ResponseEntity.ok(Map.of("data", glossaryService.update(id, request)));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Map<String, String>> deleteGlossary(@PathVariable String id) {
-        glossaries.removeIf(g -> Objects.equals(g.get("id"), id));
+    public ResponseEntity<Map<String, String>> deleteGlossary(@PathVariable Long id) {
+        validatePositiveId(id);
+        glossaryService.delete(id);
         return ResponseEntity.ok(Map.of("message", "Glossary entry deleted successfully"));
+    }
+
+    private void validatePositiveId(Long id) {
+        if (id <= 0) {
+            throw new IllegalArgumentException("id must be positive");
+        }
     }
 }

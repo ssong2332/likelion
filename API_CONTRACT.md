@@ -175,3 +175,115 @@
   "message": "Invalid IANA timezone: Invalid/Zone"
 }
 ```
+
+---
+
+## 5. Glossary CRUD (용어집 관리 - F-5)
+
+Glossary ID는 MySQL의 `BIGINT` PK를 사용하며 JSON number로 전달합니다. `term`은 전역 Glossary에서 중복될 수 없습니다.
+
+### `GET /api/glossaries`
+
+#### Response (200 OK)
+```json
+{
+  "data": [
+    {
+      "id": 1,
+      "term": "EOD",
+      "rule": "End of Day",
+      "note": "업무 종료 전까지"
+    }
+  ]
+}
+```
+
+빈 Glossary는 다음과 같이 반환합니다.
+
+```json
+{
+  "data": []
+}
+```
+
+### `POST /api/glossaries`
+
+#### Request
+```json
+{
+  "term": "EOD",
+  "rule": "End of Day",
+  "note": "업무 종료 전까지"
+}
+```
+
+#### Response (201 Created)
+```json
+{
+  "data": {
+    "id": 1,
+    "term": "EOD",
+    "rule": "End of Day",
+    "note": "업무 종료 전까지"
+  }
+}
+```
+
+### `PUT /api/glossaries/{id}`
+
+#### Request
+```json
+{
+  "term": "EOD",
+  "rule": "End of business day",
+  "note": null
+}
+```
+
+#### Response (200 OK)
+```json
+{
+  "data": {
+    "id": 1,
+    "term": "EOD",
+    "rule": "End of business day",
+    "note": null
+  }
+}
+```
+
+### `DELETE /api/glossaries/{id}`
+
+#### Response (200 OK)
+```json
+{
+  "message": "Glossary entry deleted successfully"
+}
+```
+
+### Error (400 Bad Request) — validation
+```json
+{
+  "status": 400,
+  "error": "BAD_REQUEST",
+  "message": "term is required"
+}
+```
+
+### Error (404 Not Found)
+```json
+{
+  "status": 404,
+  "error": "NOT_FOUND",
+  "message": "Glossary not found: 999"
+}
+```
+
+### Error (409 Conflict) — duplicate term
+```json
+{
+  "status": 409,
+  "error": "CONFLICT",
+  "message": "Glossary term already exists: EOD"
+}
+```
