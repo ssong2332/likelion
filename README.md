@@ -65,7 +65,7 @@
 * **Backend**: **Spring Boot 3.3 (Java 17, Gradle)**, Spring Web, Spring Data JPA, Lombok
 * **AI Engine**: **OpenAI API (`gpt-4o-mini`)** (JSON Schema Structured Outputs)
 * **Cloud & Server**: **가비아 클라우드 서버 (Gabia Cloud)** (Docker 컨테이너 또는 JAR 직접 실행), Nginx (Reverse Proxy & SSL)
-* **Database**: MySQL / PostgreSQL (가비아 클라우드 연동 DB)
+* **Database**: **MySQL**, Spring Data JPA, Flyway (가비아 클라우드 연동 DB)
 * **Collaboration**: GitHub Monorepo (`develop`, `feat/*` 브랜치 전략)
 
 ---
@@ -97,3 +97,18 @@ cd likelion
 # 2. 본인 역할에 맞는 브랜치로 전환 (예시: 백엔드 A)
 git checkout feat/be-a/f2-ai-refine
 ```
+
+### 백엔드 로컬 DB 환경변수 (Windows PowerShell)
+
+MySQL에 `manyfast` 데이터베이스와 해당 데이터베이스에 접근 가능한 계정을 준비한 뒤 다음 환경변수를 설정합니다. Flyway가 스키마를 관리하므로 애플리케이션 계정에는 migration 실행에 필요한 권한이 있어야 합니다.
+
+```powershell
+$env:DB_URL = "jdbc:mysql://localhost:3306/manyfast?serverTimezone=UTC&characterEncoding=UTF-8"
+$env:DB_USERNAME = "manyfast"
+$env:DB_PASSWORD = "<local-password>"
+
+cd server
+.\gradlew.bat bootRun
+```
+
+실제 비밀번호와 운영 DB 접속정보는 저장소에 커밋하지 않습니다.

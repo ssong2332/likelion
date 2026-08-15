@@ -20,6 +20,9 @@ pids
 node_modules/
 jspm_packages/
 
+# Gradle local cache
+.gradle/
+
 # TypeScript cache
 *.tsbuildinfo
 
