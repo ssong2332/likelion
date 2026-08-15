@@ -287,3 +287,110 @@ Glossary ID는 MySQL의 `BIGINT` PK를 사용하며 JSON number로 전달합니�
   "message": "Glossary term already exists: EOD"
 }
 ```
+
+---
+
+## 6. Rule CRUD (규칙 관리 - F-5)
+
+Rule ID는 MySQL의 `BIGINT` PK를 사용하며 JSON number로 전달합니다. `name`은 전역 Rule에서 중복될 수 없습니다.
+
+### `GET /api/rules`
+
+#### Response (200 OK)
+```json
+{
+  "data": [
+    {
+      "id": 1,
+      "name": "보고서 마감",
+      "description": "매주 목요일 17:00 KST까지 초안 공유"
+    }
+  ]
+}
+```
+
+빈 Rule 목록은 다음과 같이 반환합니다.
+
+```json
+{
+  "data": []
+}
+```
+
+### `POST /api/rules`
+
+#### Request
+```json
+{
+  "name": "보고서 마감",
+  "description": "매주 목요일 17:00 KST까지 초안 공유"
+}
+```
+
+#### Response (201 Created)
+```json
+{
+  "data": {
+    "id": 1,
+    "name": "보고서 마감",
+    "description": "매주 목요일 17:00 KST까지 초안 공유"
+  }
+}
+```
+
+### `PUT /api/rules/{id}`
+
+#### Request
+```json
+{
+  "name": "보고서 마감",
+  "description": "매주 금요일 12:00 KST까지 최종본 공유"
+}
+```
+
+#### Response (200 OK)
+```json
+{
+  "data": {
+    "id": 1,
+    "name": "보고서 마감",
+    "description": "매주 금요일 12:00 KST까지 최종본 공유"
+  }
+}
+```
+
+### `DELETE /api/rules/{id}`
+
+#### Response (200 OK)
+```json
+{
+  "message": "Rule deleted successfully"
+}
+```
+
+### Error (400 Bad Request) — validation
+```json
+{
+  "status": 400,
+  "error": "BAD_REQUEST",
+  "message": "name is required"
+}
+```
+
+### Error (404 Not Found)
+```json
+{
+  "status": 404,
+  "error": "NOT_FOUND",
+  "message": "Rule not found: 999"
+}
+```
+
+### Error (409 Conflict) — duplicate name
+```json
+{
+  "status": 409,
+  "error": "CONFLICT",
+  "message": "Rule name already exists: 보고서 마감"
+}
+```
