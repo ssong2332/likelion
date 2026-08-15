@@ -22,7 +22,7 @@ public class RuleController {
         Map<String, Object> newRule = new HashMap<>(request);
         newRule.put("id", String.valueOf(System.currentTimeMillis()));
         rules.add(newRule);
-        return ResponseEntity.status(201).ok(Map.of("data", newRule));
+        return ResponseEntity.status(201).body(Map.of("data", newRule));
     }
 
     @DeleteMapping("/{id}")

@@ -23,7 +23,7 @@ public class GlossaryController {
         Map<String, Object> newEntry = new HashMap<>(request);
         newEntry.put("id", String.valueOf(System.currentTimeMillis()));
         glossaries.add(newEntry);
-        return ResponseEntity.status(201).ok(Map.of("data", newEntry));
+        return ResponseEntity.status(201).body(Map.of("data", newEntry));
     }
 
     @DeleteMapping("/{id}")
