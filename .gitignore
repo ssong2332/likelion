@@ -54,6 +54,13 @@ jspm_packages/
 .env.test.local
 .env.production.local
 
+# Spring Boot Secret Configuration Files
+*secret*.yml
+*secret*.yaml
+*secret*.properties
+application-local.yml
+application-local.yaml
+
 # Build output
 dist/
 build/
