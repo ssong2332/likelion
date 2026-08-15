@@ -61,7 +61,7 @@
     "senderLocalTime": "2026-08-14T16:00:00+09:00",
     "receiverLocalTime": "2026-08-14T03:00:00-04:00",
     "isReceiverOffHours": true,
-    "nextAvailableCheckingTime": "2026-08-14T09:00:00-04:00 (약 6시간 뒤)"
+    "nextAvailableCheckingTime": "2026-08-14T09:00:00-04:00"
   }
 }
 ```
@@ -104,5 +104,74 @@
       "draftText": "Thanks for checking it. I am currently focusing on [진행 중인 작업], but I will reach out by [조율 가능 시점] to schedule our discussion."
     }
   ]
+}
+```
+
+---
+
+## 3. `POST /api/timezone/convert` (기준 시각 타임존 변환 - F-1)
+
+입력 시각은 ISO-8601 UTC `Instant` 형식으로 전달하고, timezone은 IANA ZoneId를 사용합니다.
+
+### Request
+```json
+{
+  "dateTime": "2026-07-15T12:00:00Z",
+  "senderTimezone": "Asia/Seoul",
+  "receiverTimezone": "America/New_York"
+}
+```
+
+### Response (200 OK)
+```json
+{
+  "dateTime": "2026-07-15T12:00:00Z",
+  "senderTimezone": "Asia/Seoul",
+  "senderLocalTime": "2026-07-15T21:00:00+09:00",
+  "receiverTimezone": "America/New_York",
+  "receiverLocalTime": "2026-07-15T08:00:00-04:00"
+}
+```
+
+---
+
+## 4. `POST /api/timezone/check-offhours` (수신자 비업무 시간 판정 - F-1)
+
+기본 업무시간은 수신자 현지 시각 기준 평일 `09:00 <= local time < 18:00`입니다. 주말과 업무시간 전후에는 다음 실제 평일 09:00를 반환합니다.
+
+### Request
+```json
+{
+  "dateTime": "2026-08-22T00:00:00Z",
+  "receiverTimezone": "America/New_York"
+}
+```
+
+### Response (200 OK) — off-hours
+```json
+{
+  "receiverTimezone": "America/New_York",
+  "receiverLocalTime": "2026-08-21T20:00:00-04:00",
+  "isReceiverOffHours": true,
+  "nextAvailableCheckingTime": "2026-08-24T09:00:00-04:00"
+}
+```
+
+### Response (200 OK) — 업무시간 내
+```json
+{
+  "receiverTimezone": "America/New_York",
+  "receiverLocalTime": "2026-08-17T10:00:00-04:00",
+  "isReceiverOffHours": false,
+  "nextAvailableCheckingTime": null
+}
+```
+
+### Error (400 Bad Request)
+```json
+{
+  "status": 400,
+  "error": "BAD_REQUEST",
+  "message": "Invalid IANA timezone: Invalid/Zone"
 }
 ```
