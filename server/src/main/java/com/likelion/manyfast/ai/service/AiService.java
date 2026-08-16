@@ -65,7 +65,10 @@ public class AiService {
                     4. RISKY EXPRESSIONS & WARNINGS:
                        - Identify specific phrases that could cause misunderstanding or offense, explaining why and how they were replaced.
                        - If a deadline or detail is vague, provide a helpful suggestion in 'missingInfoWarnings'.
-                    5. OUTPUT FORMAT:
+                    5. GLOSSARY MATCHING:
+                       - ONLY include items in 'appliedGlossary' IF the specific glossary term was explicitly present or mentioned in the user's original message.
+                       - If no registered glossary terms appear in the user's input, 'appliedGlossary' MUST be an empty array [].
+                    6. OUTPUT FORMAT:
                        - Return ONLY a valid JSON object matching this structure:
                        {
                          "refinedText": "string",
@@ -108,7 +111,20 @@ public class AiService {
                 if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                     JsonNode root = objectMapper.readTree(response.getBody());
                     String content = root.path("choices").get(0).path("message").path("content").asText();
-                    return objectMapper.readValue(content, RefineResponseDto.class);
+                    RefineResponseDto dto = objectMapper.readValue(content, RefineResponseDto.class);
+
+                    // 실제 원문에 포함된 용어만 남기는 엄격 필터링
+                    if (dto.getAppliedGlossary() != null && request.getOriginalText() != null) {
+                        String originalLower = request.getOriginalText().toLowerCase();
+                        List<Map<String, Object>> filtered = dto.getAppliedGlossary().stream()
+                                .filter(g -> {
+                                    String term = String.valueOf(g.getOrDefault("term", "")).toLowerCase();
+                                    return !term.isBlank() && originalLower.contains(term);
+                                })
+                                .toList();
+                        dto.setAppliedGlossary(filtered);
+                    }
+                    return dto;
                 }
             } catch (Exception e) {
                 System.err.println("[AiService] OpenAI API 호출 실패, 목업 엔진으로 안전 폴백: " + e.getMessage());
