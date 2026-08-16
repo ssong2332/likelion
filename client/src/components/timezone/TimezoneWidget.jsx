@@ -1,7 +1,7 @@
 import React from 'react';
 import { Clock, AlertTriangle } from 'lucide-react';
 
-export default function TimezoneWidget({ senderTz = 'Asia/Seoul', receiverTz = 'America/New_York', isOffHours = false, nextAvailableTime = '' }) {
+export default function TimezoneWidget({ senderTz = 'Asia/Seoul', receiverTz = 'America/New_York', isOffHours, nextAvailableTime = '' }) {
   const getFormattedTime = (tz) => {
     try {
       return new Intl.DateTimeFormat('ko-KR', {
@@ -13,6 +13,29 @@ export default function TimezoneWidget({ senderTz = 'Asia/Seoul', receiverTz = '
     } catch {
       return '16:00';
     }
+  };
+
+  const getReceiverHour = (tz) => {
+    try {
+      const hourStr = new Intl.DateTimeFormat('en-US', {
+        timeZone: tz,
+        hour: 'numeric',
+        hour12: false
+      }).format(new Date());
+      return parseInt(hourStr, 10);
+    } catch {
+      return 12;
+    }
+  };
+
+  const currentHour = getReceiverHour(receiverTz);
+  // 오전 9시 이전(< 9) 또는 오후 6시 이후(>= 18)는 야간/비업무시간
+  const isCurrentlyOffHours = (currentHour < 9 || currentHour >= 18);
+
+  const getNextAvailableTimeText = () => {
+    if (nextAvailableTime) return nextAvailableTime;
+    const hoursLeft = currentHour < 9 ? (9 - currentHour) : (24 - currentHour + 9);
+    return `현지 시각 오전 09:00 (약 ${hoursLeft}시간 뒤)`;
   };
 
   return (
@@ -33,13 +56,13 @@ export default function TimezoneWidget({ senderTz = 'Asia/Seoul', receiverTz = '
         <span style={{ color: 'var(--text-subtle)' }}>⇄</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <span style={{ fontSize: '13px', fontWeight: 600 }}>수신 (상대방)</span>
-          <span style={{ fontSize: '13px', color: isOffHours ? 'var(--warning-yellow)' : 'var(--text-muted)', fontWeight: isOffHours ? 700 : 500 }}>
+          <span style={{ fontSize: '13px', color: isCurrentlyOffHours ? '#d97706' : 'var(--text-muted)', fontWeight: isCurrentlyOffHours ? 700 : 500 }}>
             {getFormattedTime(receiverTz)}
           </span>
         </div>
       </div>
 
-      {isOffHours && (
+      {isCurrentlyOffHours && (
         <div style={{
           marginTop: '10px',
           padding: '8px 12px',
@@ -52,7 +75,7 @@ export default function TimezoneWidget({ senderTz = 'Asia/Seoul', receiverTz = '
           color: '#92400e'
         }}>
           <AlertTriangle size={14} color="#d97706" />
-          <span>수신자 비업무(야간) 시간대입니다. 확인 가능 시점: <strong>{nextAvailableTime || '오전 9:00'}</strong></span>
+          <span>수신자 비업무(야간) 시간대입니다. 확인 가능 시점: <strong>{getNextAvailableTimeText()}</strong></span>
         </div>
       )}
     </div>
