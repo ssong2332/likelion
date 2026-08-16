@@ -446,3 +446,75 @@ PUT은 세 필드를 모두 교체하며, 저장된 설정이 없으면 singleto
   "message": "tone is required"
 }
 ```
+
+---
+
+## 8. Message History (메시지 이력 조회 및 삭제 - F-7)
+
+Message History는 AI 성공 결과를 저장하기 위한 내부 리소스입니다. 이번 API에서는 이력 조회와 삭제만 제공하며, 외부 생성 API는 제공하지 않습니다.
+
+### `GET /api/messages/history`
+
+최신 이력부터 `createdAt DESC, id DESC` 순서로 반환합니다.
+
+#### Response (200 OK)
+```json
+{
+  "totalCount": 1,
+  "history": [
+    {
+      "id": 1,
+      "originalText": "Can you send this by EOD?",
+      "resultText": "Could you please send this by the end of the day?",
+      "createdAt": "2026-08-16T10:30:00Z"
+    }
+  ]
+}
+```
+
+빈 History는 다음과 같이 반환합니다.
+
+```json
+{
+  "totalCount": 0,
+  "history": []
+}
+```
+
+### `DELETE /api/messages/{id}`
+
+#### Response (200 OK)
+```json
+{
+  "message": "History item permanently deleted"
+}
+```
+
+### `DELETE /api/messages/all`
+
+History가 비어 있어도 동일한 성공 응답을 반환합니다.
+
+#### Response (200 OK)
+```json
+{
+  "message": "All message history permanently deleted"
+}
+```
+
+### Error (400 Bad Request) — invalid ID
+```json
+{
+  "status": 400,
+  "error": "BAD_REQUEST",
+  "message": "id must be positive"
+}
+```
+
+### Error (404 Not Found)
+```json
+{
+  "status": 404,
+  "error": "NOT_FOUND",
+  "message": "Message history not found: 999999"
+}
+```
