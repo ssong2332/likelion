@@ -2,6 +2,8 @@ server:
   port: 8080
 
 spring:
+  profiles:
+    include: local
   application:
     name: manyfast-server
   datasource:
