@@ -1,8 +1,9 @@
 // API Client for Manyfast Frontend
+const API_BASE = typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:8080' : '';
 
 export async function analyzeAndRefine(payload) {
   try {
-    const response = await fetch('/api/ai/analyze-refine', {
+    const response = await fetch(`${API_BASE}/api/ai/analyze-refine`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
@@ -55,7 +56,7 @@ export async function analyzeAndRefine(payload) {
 
 export async function generateReplyDrafts(payload) {
   try {
-    const response = await fetch('/api/ai/reply-draft', {
+    const response = await fetch(`${API_BASE}/api/ai/reply-draft`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
