@@ -394,3 +394,55 @@ Rule ID는 MySQL의 `BIGINT` PK를 사용하며 JSON number로 전달합니다. 
   "message": "Rule name already exists: 보고서 마감"
 }
 ```
+
+---
+
+## 7. Collaboration Style (개인 협업 성향 설정 - F-6)
+
+현재 인증 없는 MVP에서는 ID가 노출되지 않는 singleton 설정으로 관리합니다. 저장된 설정이 없을 때는 기본 협업 성향을 반환합니다.
+
+### `GET /api/user/collaboration-style`
+
+#### Response (200 OK)
+```json
+{
+  "data": {
+    "tone": "polite",
+    "directness": "balanced",
+    "detailLevel": "concise"
+  }
+}
+```
+
+### `PUT /api/user/collaboration-style`
+
+PUT은 세 필드를 모두 교체하며, 저장된 설정이 없으면 singleton 설정을 생성합니다.
+
+#### Request
+```json
+{
+  "tone": "friendly",
+  "directness": "direct",
+  "detailLevel": "detailed"
+}
+```
+
+#### Response (200 OK)
+```json
+{
+  "data": {
+    "tone": "friendly",
+    "directness": "direct",
+    "detailLevel": "detailed"
+  }
+}
+```
+
+### Error (400 Bad Request) — validation
+```json
+{
+  "status": 400,
+  "error": "BAD_REQUEST",
+  "message": "tone is required"
+}
+```
