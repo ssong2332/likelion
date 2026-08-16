@@ -29,7 +29,7 @@ public class AiService {
     private final RestTemplate restTemplate = new RestTemplate();
 
     /**
-     * F-2, F-3, F-4.1: 핵심 정보 분석 및 맥락 기반 톤 교정
+     * F-2, F-3, F-4.1, F-5, F-6: 도메인 데이터(용어집, 성향)를 동적 주입한 AI 교정
      */
     public RefineResponseDto refineMessage(RefineRequestDto request) {
         if (apiKey != null && !apiKey.isBlank()) {
@@ -38,9 +38,16 @@ public class AiService {
                         : "zh".equalsIgnoreCase(request.getTargetLang()) ? "Chinese"
                         : "ja".equalsIgnoreCase(request.getTargetLang()) ? "Japanese" : "English";
 
+                // Phase 5: 동적 프롬프트 조립 (성향 및 용어집 규칙)
+                String styleSection = buildStyleSection(request.getCollaborationStyle());
+                String glossarySection = buildGlossarySection(request.getAppliedGlossaryIds());
+
                 String systemPrompt = """
                     You are 'Manyfast AI', an expert executive communication assistant for global business collaboration.
                     Your goal is to refine raw, emotional, or vague business messages into clear, polite, and effective messages in %s without losing critical context.
+
+                    %s
+                    %s
 
                     [CORE INSTRUCTIONS]
                     1. FACT PRESERVATION: Extract the 5 core business facts from the user's message:
@@ -52,14 +59,13 @@ public class AiService {
                     2. REFINEMENT & TONE:
                        - Transform blameful, emotional, or demanding tone (e.g., "안 봐주셔서", "빨리") into respectful, professional business language.
                        - Preserve the urgency and deadline clearly without sounding hostile.
+                       - Strictly follow the Style Preferences and Glossary Rules designated above.
                     3. BACK-TRANSLATION:
                        - Provide a faithful Korean translation of your refinedText so the user can verify the meaning.
                     4. RISKY EXPRESSIONS & WARNINGS:
                        - Identify specific phrases that could cause misunderstanding or offense, explaining why and how they were replaced.
                        - If a deadline or detail is vague, provide a helpful suggestion in 'missingInfoWarnings'.
-                    5. GLOSSARY RULES:
-                       - Keep any designated brand names or terminology unchanged.
-                    6. OUTPUT FORMAT:
+                    5. OUTPUT FORMAT:
                        - Return ONLY a valid JSON object matching this structure:
                        {
                          "refinedText": "string",
@@ -81,7 +87,7 @@ public class AiService {
                            { "term": "string", "rule": "string", "matchedInRefined": true }
                          ]
                        }
-                    """.formatted(targetLanguage);
+                    """.formatted(targetLanguage, styleSection, glossarySection);
 
                 Map<String, Object> payload = new HashMap<>();
                 payload.put("model", model);
@@ -219,5 +225,34 @@ public class AiService {
                         )
                 ))
                 .build();
+    }
+
+    /**
+     * Phase 5 Helper: 사용자 협업 성향 지시문 빌더
+     */
+    private String buildStyleSection(Map<String, Object> style) {
+        if (style == null || style.isEmpty()) {
+            return "[USER COLLABORATION STYLE]\n- Tone: Polite and professional\n- Directness: Balanced";
+        }
+        String tone = String.valueOf(style.getOrDefault("tone", "polite"));
+        String directness = String.valueOf(style.getOrDefault("directness", "balanced"));
+        return """
+            [USER COLLABORATION STYLE]
+            - Desired Tone: %s (Ensure the refinement reflects this tone)
+            - Directness Level: %s (Adjust how explicitly the request is stated)
+            """.formatted(tone, directness);
+    }
+
+    /**
+     * Phase 5 Helper: 용어집 규칙 지시문 빌더
+     */
+    private String buildGlossarySection(List<String> glossaryIds) {
+        // 기본 내장 용어집 규칙 (Manyfast 원문 유지, ASAP 시간 명시)
+        return """
+            [DESIGNATED GLOSSARY RULES]
+            - Term 'Manyfast': Keep original spelling unchanged (Do not translate).
+            - Term 'ASAP': Clarify with a concrete EOD / business hour timeframe.
+            - Term 'PR': Retain as 'Pull Request' or 'PR'.
+            """;
     }
 }
