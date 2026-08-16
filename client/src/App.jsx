@@ -7,6 +7,12 @@ import TimezoneWidget from './components/timezone/TimezoneWidget';
 import SettingsModal from './components/settings/SettingsModal';
 import { analyzeAndRefine } from './api/client';
 
+const LANG_TIMEZONE_MAP = {
+  en: 'America/New_York',
+  zh: 'Asia/Shanghai',
+  ja: 'Asia/Tokyo'
+};
+
 export default function App() {
   const [text, setText] = useState('');
   const [targetLang, setTargetLang] = useState('en');
@@ -14,12 +20,16 @@ export default function App() {
   const [refineResult, setRefineResult] = useState(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
+  const receiverTimezone = LANG_TIMEZONE_MAP[targetLang] || 'America/New_York';
+
   const handleAnalyze = async () => {
     if (!text.trim()) return;
     setLoading(true);
     const data = await analyzeAndRefine({
       originalText: text,
-      targetLang: targetLang
+      targetLang: targetLang,
+      senderTimezone: 'Asia/Seoul',
+      receiverTimezone: receiverTimezone
     });
     setRefineResult(data);
     setLoading(false);
@@ -58,6 +68,8 @@ export default function App() {
         {/* Left Column: Editor & Timezone */}
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           <TimezoneWidget
+            senderTz="Asia/Seoul"
+            receiverTz={receiverTimezone}
             isOffHours={refineResult?.timezoneInfo?.isReceiverOffHours}
             nextAvailableTime={refineResult?.timezoneInfo?.nextAvailableCheckingTime}
           />
