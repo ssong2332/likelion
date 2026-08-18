@@ -1,20 +1,54 @@
-import { useState } from 'react'
-
-const mockEntries = [
-  { title: 'Project Update', preview: 'Could you please submit the PR as soon...', time: '오늘 18:32' },
-  { title: '회의 일정 변경 요청', preview: 'Would it be possible to reschedule...', time: '어제 14:20' },
-  { title: '협업 제안 메일', preview: 'I would like to propose a collaboration...', time: '어제 11:05' },
-]
+import { useState, useEffect } from 'react'
+import { getMessageHistory, deleteMessageHistoryItem, deleteAllMessageHistory } from '../api/history'
 
 export default function ArchivePanel() {
   const [subTab, setSubTab] = useState('all')
+  const [entries, setEntries] = useState([])
   const [retentionDays, setRetentionDays] = useState('30')
   const [archiveAlert, setArchiveAlert] = useState(true)
   const [autoDelete, setAutoDelete] = useState(true)
+  const [isLoading, setIsLoading] = useState(false)
 
-  function handleDeleteAll() {
-    if (confirm('모든 데이터를 삭제하시겠습니까?')) {
-      alert('삭제되었습니다 (더미)')
+  useEffect(() => {
+    loadHistory()
+  }, [])
+
+  async function loadHistory() {
+    try {
+      setIsLoading(true)
+      const res = await getMessageHistory()
+      if (res && res.history) {
+        setEntries(res.history)
+      } else {
+        setEntries([])
+      }
+    } catch (err) {
+      console.warn('Failed to load message history:', err)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  async function handleDeleteItem(id) {
+    if (confirm('해당 메시지 기록을 삭제하시겠습니까?')) {
+      try {
+        await deleteMessageHistoryItem(id)
+        setEntries((prev) => prev.filter((item) => item.id !== id))
+      } catch (err) {
+        alert('삭제 실패: ' + err.message)
+      }
+    }
+  }
+
+  async function handleDeleteAll() {
+    if (confirm('모든 메시지 데이터를 영구 삭제하시겠습니까?')) {
+      try {
+        await deleteAllMessageHistory()
+        setEntries([])
+        alert('모든 데이터가 삭제되었습니다.')
+      } catch (err) {
+        alert('삭제 실패: ' + err.message)
+      }
     }
   }
 
@@ -34,13 +68,26 @@ export default function ArchivePanel() {
       </div>
 
       <div className="sai-list-section">
-        {mockEntries.map((entry, i) => (
-          <div key={i} className="sai-row-card">
-            <div>
-              <div className="sai-row-title">{entry.title}</div>
-              <div className="sai-row-desc">{entry.preview}</div>
+        {isLoading && <div style={{ padding: '12px', color: '#888', textAlign: 'center' }}>로딩 중...</div>}
+        {!isLoading && entries.length === 0 && (
+          <div style={{ padding: '20px', color: '#888', textAlign: 'center', fontSize: '13px' }}>
+            저장된 메시지 이력이 없습니다.
+          </div>
+        )}
+        {entries.map((entry) => (
+          <div key={entry.id} className="sai-row-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div style={{ flex: 1, marginRight: '8px' }}>
+              <div className="sai-row-title" style={{ fontWeight: 600 }}>{entry.originalText}</div>
+              <div className="sai-row-desc" style={{ color: 'var(--sai-primary, #4361ee)', marginTop: '4px' }}>
+                {entry.refinedText}
+              </div>
             </div>
-            <span className="sai-row-time">{entry.time}</span>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+              <span className="sai-row-time" style={{ fontSize: '11px', color: '#aaa' }}>
+                {entry.createdAt ? new Date(entry.createdAt).toLocaleDateString() : ''}
+              </span>
+              <button className="sai-icon-btn" onClick={() => handleDeleteItem(entry.id)}>🗑</button>
+            </div>
           </div>
         ))}
       </div>
@@ -82,7 +129,9 @@ export default function ArchivePanel() {
         </div>
       </div>
 
-      <button className="sai-danger-btn" onClick={handleDeleteAll}>🗑 모든 데이터 삭제</button>
+      <button className="sai-danger-btn" onClick={handleDeleteAll} disabled={entries.length === 0}>
+        🗑 모든 데이터 삭제
+      </button>
 
       <div className="sai-tip-banner">개인정보 보호를 위해 데이터가 간편하게 관리돼요.</div>
     </div>

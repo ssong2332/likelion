@@ -1,34 +1,146 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { getUserStyle, updateUserStyle } from '../api/userstyle'
 
 export default function ProfilePanel() {
+  const [userName, setUserName] = useState('사용자')
+  const [userTeam, setUserTeam] = useState('글로벌 협업팀')
+  const [isEditingProfile, setIsEditingProfile] = useState(false)
+
   const [tone, setTone] = useState('polite')
   const [conciseness, setConciseness] = useState(30)
   const [politeness, setPoliteness] = useState(85)
   const [length, setLength] = useState(50)
   const [phrases, setPhrases] = useState(['Could you please', 'I would appreciate it', 'As soon as possible'])
+  const [isSaving, setIsSaving] = useState(false)
+
+  useEffect(() => {
+    // 1. 프로필 정보 및 선호 표현 로컬 스토리지에서 로드
+    try {
+      const savedProfile = localStorage.getItem('sai_user_profile')
+      if (savedProfile) {
+        const parsed = JSON.parse(savedProfile)
+        if (parsed.name) setUserName(parsed.name)
+        if (parsed.team) setUserTeam(parsed.team)
+      }
+      const savedPhrases = localStorage.getItem('sai_user_phrases')
+      if (savedPhrases) {
+        setPhrases(JSON.parse(savedPhrases))
+      }
+    } catch (_) {}
+
+    // 2. 백엔드 DB에서 협업 스타일 로드
+    getUserStyle()
+      .then((res) => {
+        const data = res.data
+        if (data) {
+          if (data.tone) setTone(data.tone)
+          if (data.directness === 'direct') setPoliteness(30)
+          else if (data.directness === 'indirect') setPoliteness(90)
+          else setPoliteness(60)
+
+          if (data.detailLevel === 'concise') setConciseness(20)
+          else if (data.detailLevel === 'detailed') setConciseness(80)
+          else setConciseness(50)
+        }
+      })
+      .catch((err) => {
+        console.warn('Could not load user style from server:', err)
+      })
+  }, [])
+
+  function handleSaveProfile() {
+    setIsEditingProfile(false)
+    try {
+      localStorage.setItem('sai_user_profile', JSON.stringify({ name: userName, team: userTeam }))
+    } catch (_) {}
+  }
+
+  async function handleToneChange(newTone) {
+    setTone(newTone)
+    saveStyleToServer(newTone, conciseness, politeness)
+  }
+
+  async function handleSliderRelease() {
+    saveStyleToServer(tone, conciseness, politeness)
+  }
+
+  async function saveStyleToServer(currentTone, currentConcise, currentPolite) {
+    const directness = currentPolite < 40 ? 'direct' : currentPolite > 75 ? 'indirect' : 'balanced'
+    const detailLevel = currentConcise < 40 ? 'concise' : currentConcise > 70 ? 'detailed' : 'moderate'
+    try {
+      setIsSaving(true)
+      await updateUserStyle({
+        tone: currentTone,
+        directness,
+        detailLevel,
+      })
+    } catch (err) {
+      console.warn('Failed to save user style to server:', err)
+    } finally {
+      setIsSaving(false)
+    }
+  }
 
   function removePhrase(p) {
-    setPhrases((prev) => prev.filter((x) => x !== p))
+    const next = phrases.filter((x) => x !== p)
+    setPhrases(next)
+    try {
+      localStorage.setItem('sai_user_phrases', JSON.stringify(next))
+    } catch (_) {}
   }
 
   function addPhrase() {
-    const p = prompt('추가할 표현')
-    if (p) setPhrases((prev) => [...prev, p])
+    const p = prompt('추가할 선호 표현을 입력하세요 (예: Thank you in advance)')
+    if (p && p.trim()) {
+      const next = [...phrases, p.trim()]
+      setPhrases(next)
+      try {
+        localStorage.setItem('sai_user_phrases', JSON.stringify(next))
+      } catch (_) {}
+    }
   }
 
   return (
     <div>
       <h3 className="sai-h3">내 프로필</h3>
-      <div className="sai-profile-card">
-        <div className="sai-avatar">E</div>
+      <div className="sai-profile-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div className="sai-avatar">{userName.charAt(0) || 'U'}</div>
+          {isEditingProfile ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <input
+                type="text"
+                value={userName}
+                onChange={(e) => setUserName(e.target.value)}
+                placeholder="이름"
+                style={{ padding: '2px 6px', fontSize: '13px', borderRadius: '4px', border: '1px solid #ccc' }}
+              />
+              <input
+                type="text"
+                value={userTeam}
+                onChange={(e) => setUserTeam(e.target.value)}
+                placeholder="소속 팀"
+                style={{ padding: '2px 6px', fontSize: '12px', borderRadius: '4px', border: '1px solid #ccc' }}
+              />
+            </div>
+          ) : (
+            <div>
+              <div className="sai-row-title">{userName}</div>
+              <div className="sai-row-desc">{userTeam}</div>
+            </div>
+          )}
+        </div>
         <div>
-          <div className="sai-row-title">Emily Kim</div>
-          <div className="sai-row-desc">Marketing Team</div>
+          {isEditingProfile ? (
+            <button className="sai-link-btn" onClick={handleSaveProfile} style={{ fontSize: '12px' }}>저장</button>
+          ) : (
+            <button className="sai-link-btn" onClick={() => setIsEditingProfile(true)} style={{ fontSize: '12px' }}>수정</button>
+          )}
         </div>
       </div>
 
       <div className="sai-settings-card">
-        <div className="sai-setting-label">선호 말투</div>
+        <div className="sai-setting-label">선호 말투 {isSaving && <span style={{ fontSize: '11px', color: 'var(--sai-primary, #4361ee)' }}>(저장 중...)</span>}</div>
         <div className="sai-tone-row">
           {[
             { id: 'polite', label: '정중하게' },
@@ -38,18 +150,39 @@ export default function ProfilePanel() {
             <button
               key={t.id}
               className={tone === t.id ? 'sai-tone-btn active' : 'sai-tone-btn'}
-              onClick={() => setTone(t.id)}
+              onClick={() => handleToneChange(t.id)}
             >
               {t.label}
             </button>
           ))}
         </div>
 
-        <SliderRow label="간결한 정도" leftLabel="간결하게" rightLabel="자세하게" value={conciseness} onChange={setConciseness} />
-        <SliderRow label="정중할 정도" leftLabel="낮게" rightLabel="높게" value={politeness} onChange={setPoliteness} />
-        <SliderRow label="문장 길이" leftLabel="짧게" rightLabel="길게" value={length} onChange={setLength} />
+        <SliderRow
+          label="간결한 정도"
+          leftLabel="간결하게"
+          rightLabel="자세하게"
+          value={conciseness}
+          onChange={setConciseness}
+          onRelease={handleSliderRelease}
+        />
+        <SliderRow
+          label="정중할 정도"
+          leftLabel="낮게"
+          rightLabel="높게"
+          value={politeness}
+          onChange={setPoliteness}
+          onRelease={handleSliderRelease}
+        />
+        <SliderRow
+          label="문장 길이"
+          leftLabel="짧게"
+          rightLabel="길게"
+          value={length}
+          onChange={setLength}
+          onRelease={handleSliderRelease}
+        />
 
-        <div className="sai-setting-label">AI 자주 표현 선호</div>
+        <div className="sai-setting-label" style={{ marginTop: '12px' }}>AI 자주 표현 선호</div>
         <div className="sai-tag-row">
           {phrases.map((p) => (
             <span key={p} className="sai-tag">
@@ -60,12 +193,12 @@ export default function ProfilePanel() {
         </div>
       </div>
 
-      <div className="sai-tip-banner">내 성향에 맞는 표현으로 AI가 제안해요.</div>
+      <div className="sai-tip-banner">내 성향에 맞는 표현으로 AI가 교정 및 제안을 제공합니다.</div>
     </div>
   )
 }
 
-function SliderRow({ label, leftLabel, rightLabel, value, onChange }) {
+function SliderRow({ label, leftLabel, rightLabel, value, onChange, onRelease }) {
   return (
     <div className="sai-slider-row">
       <div className="sai-setting-label">{label}</div>
@@ -79,6 +212,8 @@ function SliderRow({ label, leftLabel, rightLabel, value, onChange }) {
         max="100"
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
+        onMouseUp={onRelease}
+        onTouchEnd={onRelease}
         className="sai-slider"
       />
     </div>

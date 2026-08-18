@@ -1,22 +1,23 @@
 // src/api/timezone.js
+import { request } from './config.js';
 
 export async function checkOffHours({ dateTime, receiverTimezone }) {
-  await new Promise((r) => setTimeout(r, 300))
-  return {
-    receiverTimezone,
-    receiverLocalTime: new Date().toISOString(),
-    isReceiverOffHours: true,
-    nextAvailableCheckingTime: null,
-  }
+  return request('/api/timezone/check-offhours', {
+    method: 'POST',
+    body: JSON.stringify({
+      dateTime: dateTime || new Date().toISOString().slice(0, 19),
+      receiverTimezone,
+    }),
+  });
 }
 
 export async function convertTimezone({ dateTime, senderTimezone, receiverTimezone }) {
-  await new Promise((r) => setTimeout(r, 300))
-  return {
-    dateTime,
-    senderTimezone,
-    senderLocalTime: new Date().toISOString(),
-    receiverTimezone,
-    receiverLocalTime: new Date().toISOString(),
-  }
+  return request('/api/timezone/convert', {
+    method: 'POST',
+    body: JSON.stringify({
+      dateTime: dateTime || new Date().toISOString().slice(0, 19),
+      senderTimezone,
+      receiverTimezone,
+    }),
+  });
 }

@@ -1,31 +1,26 @@
 // src/api/glossary.js
-
-let mockGlossaries = [
-  { id: 1, term: 'EOD', rule: 'End of Day', note: '업무 종료 전까지' },
-]
+import { request } from './config.js';
 
 export async function getGlossaries() {
-  await new Promise((r) => setTimeout(r, 300))
-  return { data: mockGlossaries }
+  return request('/api/glossaries', { method: 'GET' });
 }
 
 export async function addGlossary({ term, rule, note }) {
-  await new Promise((r) => setTimeout(r, 300))
-  const newItem = { id: Date.now(), term, rule, note: note ?? null }
-  mockGlossaries.push(newItem)
-  return { data: newItem }
+  return request('/api/glossaries', {
+    method: 'POST',
+    body: JSON.stringify({ term, rule, note: note ?? null }),
+  });
 }
 
 export async function updateGlossary(id, { term, rule, note }) {
-  await new Promise((r) => setTimeout(r, 300))
-  mockGlossaries = mockGlossaries.map((g) =>
-    g.id === id ? { ...g, term, rule, note: note ?? null } : g
-  )
-  return { data: mockGlossaries.find((g) => g.id === id) }
+  return request(`/api/glossaries/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify({ term, rule, note: note ?? null }),
+  });
 }
 
 export async function deleteGlossary(id) {
-  await new Promise((r) => setTimeout(r, 300))
-  mockGlossaries = mockGlossaries.filter((g) => g.id !== id)
-  return { message: 'Glossary entry deleted successfully' }
+  return request(`/api/glossaries/${id}`, {
+    method: 'DELETE',
+  });
 }

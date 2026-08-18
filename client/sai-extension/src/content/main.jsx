@@ -1,9 +1,12 @@
-// src/content/main.js
+// src/content/main.jsx
 import { createRoot } from 'react-dom/client'
 import CorrectionModal from './Modal.jsx'
 import { analyzeRefine } from '../api/refine.js'
 import saiLogoPath from '../assets/sai-logo.png?url'
-const saiLogo = chrome.runtime.getURL(saiLogoPath.replace(/^\//, ''))
+
+const saiLogo = chrome.runtime?.getURL
+  ? chrome.runtime.getURL(saiLogoPath.replace(/^\//, ''))
+  : saiLogoPath
 
 let toolbarEl = null
 let modalRoot = null
@@ -25,12 +28,23 @@ function createToolbar(x, y, selectedText) {
   toolbarEl.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)'
   toolbarEl.style.cursor = 'pointer'
   toolbarEl.style.fontSize = '13px'
-  toolbarEl.innerHTML = `<img src="${saiLogo}" alt="SAI" style="height:16px;vertical-align:middle;" /> SAI`
+  toolbarEl.style.display = 'flex'
+  toolbarEl.style.alignItems = 'center'
+  toolbarEl.style.gap = '6px'
+  toolbarEl.innerHTML = `<img src="${saiLogo}" alt="SAI" style="height:16px;vertical-align:middle;" /> <span>SAI 교정</span>`
 
-  toolbarEl.addEventListener('click', async () => {
-    removeToolbar()
-    const result = await analyzeRefine({ originalText: selectedText })
-    showModal(result, selectedText)
+  toolbarEl.addEventListener('click', async (e) => {
+    e.stopPropagation()
+    try {
+      toolbarEl.innerHTML = `<img src="${saiLogo}" alt="SAI" style="height:16px;vertical-align:middle;" /> <span>교정 중...</span>`
+      toolbarEl.style.pointerEvents = 'none'
+      const result = await analyzeRefine({ originalText: selectedText })
+      removeToolbar()
+      showModal(result, selectedText)
+    } catch (err) {
+      removeToolbar()
+      alert('SAI 교정 요청 실패: ' + (err.message || '백엔드 서버에 연결할 수 없습니다.'))
+    }
   })
 
   document.body.appendChild(toolbarEl)
@@ -65,6 +79,11 @@ function removeModal() {
 document.addEventListener('mouseup', (e) => {
   // 툴바 버튼 자체를 클릭한 경우는 무시 (버튼이 재생성되어 클릭이 씹히는 걸 방지)
   if (toolbarEl && toolbarEl.contains(e.target)) {
+    return
+  }
+
+  // 모달 내부 클릭 시 툴바 방지
+  if (modalContainer && modalContainer.contains(e.target)) {
     return
   }
 
