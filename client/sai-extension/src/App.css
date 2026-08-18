@@ -1,0 +1,773 @@
+/* =========================================================
+   SAI SIDEBAR
+   Figma 기반 디자인 시스템
+   ========================================================= */
+
+:root {
+  --sai-text: #292929;
+  --sai-text-secondary: #595959;
+  --sai-text-muted: #7e7e7e;
+
+  --sai-purple: #6c3dff;
+  --sai-purple-dark: #2017bd;
+  --sai-purple-soft: #f0eeff;
+  --sai-purple-active: #e0deff;
+
+  --sai-border: #e0e0e0;
+  --sai-border-soft: #ededed;
+
+  --sai-bg: #ffffff;
+  --sai-card-bg: #fcfcfc;
+  --sai-tab-bg: #f6f6f6;
+
+  --sai-danger: #b30000;
+  --sai-danger-bg: #fff5f3;
+
+  --sai-radius: 10px;
+
+  --sai-shadow:
+    0 3px 10px rgba(0, 0, 0, 0.10);
+
+  --sai-shadow-soft:
+    0 2px 7px rgba(0, 0, 0, 0.08);
+}
+
+
+/* =========================================================
+   SIDEBAR ROOT
+   ========================================================= */
+
+.sai-sidebar {
+  width: 100%;
+  min-height: 100vh;
+  padding: 16px;
+
+  background: var(--sai-bg);
+  color: var(--sai-text);
+
+  font-family:
+    "SF Pro",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Inter",
+    "Segoe UI",
+    sans-serif;
+
+  font-size: 14px;
+  line-height: 1.4;
+
+  box-sizing: border-box;
+}
+
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+.sai-sidebar-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  margin-bottom: 14px;
+}
+
+.sai-logo-img {
+  width: auto;
+  height: 24px;
+  object-fit: contain;
+}
+
+.sai-logo-text,
+.sai-logo {
+  font-size: 20px;
+  line-height: 24px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #2f2f2f;
+}
+
+
+/* =========================================================
+   MAIN TABS
+   홈 / 보관함 / 프로필
+   ========================================================= */
+
+.sai-tabs {
+  display: flex;
+  align-items: center;
+
+  width: 100%;
+  padding: 4px;
+
+  margin-bottom: 20px;
+
+  background: var(--sai-tab-bg);
+  border-radius: 10px;
+}
+
+.sai-tab {
+  flex: 1;
+
+  min-height: 32px;
+
+  border: 0;
+  border-radius: 8px;
+
+  background: transparent;
+
+  color: var(--sai-text-muted);
+
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+
+  cursor: pointer;
+
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.sai-tab:hover {
+  color: var(--sai-text);
+}
+
+.sai-tab.active {
+  background: rgba(204, 201, 255, 0.9);
+  color: #000000;
+  font-weight: 600;
+}
+
+
+/* =========================================================
+   SECTION TITLES
+   ========================================================= */
+
+.sai-h3 {
+  margin: 0 0 10px;
+
+  font-size: 16px;
+  line-height: 20px;
+  font-weight: 600;
+
+  color: #000;
+}
+
+.sai-h4 {
+  margin: 22px 0 5px;
+
+  font-size: 16px;
+  line-height: 20px;
+  font-weight: 600;
+
+  color: #000;
+}
+
+.sai-desc-text {
+  margin: 0 0 10px;
+
+  color: #808080;
+
+  font-size: 12px;
+  line-height: 18px;
+}
+
+
+/* =========================================================
+   TODAY SUMMARY
+   ========================================================= */
+
+.sai-stat-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+
+  gap: 8px;
+
+  margin-bottom: 20px;
+}
+
+.sai-stat {
+  min-height: 48px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  padding: 6px 8px;
+
+  background: #fcfcfc;
+
+  border: 1px solid var(--sai-border-soft);
+  border-radius: 10px;
+
+  box-shadow: var(--sai-shadow-soft);
+
+  font-size: 12px;
+  line-height: 17px;
+  color: var(--sai-text-secondary);
+}
+
+.sai-stat-num {
+  margin-bottom: 1px;
+
+  font-size: 18px;
+  line-height: 20px;
+  font-weight: 600;
+}
+
+.sai-stat:nth-child(1) .sai-stat-num {
+  color: #b30000;
+}
+
+.sai-stat:nth-child(2) .sai-stat-num {
+  color: #2017bd;
+}
+
+.sai-stat:nth-child(3) .sai-stat-num {
+  color: #292929;
+}
+
+
+/* =========================================================
+   SUB TABS
+   규칙 / 용어집
+   보관함 필터
+   ========================================================= */
+
+.sai-sub-tabs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  margin-bottom: 12px;
+
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.sai-sub-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.sai-sub-tab {
+  flex: 0 0 auto;
+
+  height: 30px;
+  padding: 0 14px;
+
+  border: 1px solid #ebebeb;
+  border-radius: 18px;
+
+  background: #f7f7f7;
+
+  color: #595959;
+
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+
+  cursor: pointer;
+
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.sai-sub-tab:hover {
+  background: #f0f0f0;
+}
+
+.sai-sub-tab.active {
+  background: var(--sai-purple-active);
+  border-color: #d7d4ff;
+  color: #2017bd;
+  font-weight: 600;
+}
+
+
+/* =========================================================
+   LIST SECTION
+   ========================================================= */
+
+.sai-list-section {
+  margin-bottom: 18px;
+}
+
+.sai-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom: 8px;
+
+  font-size: 14px;
+  font-weight: 500;
+  color: #292929;
+}
+
+.sai-link-btn {
+  padding: 0;
+
+  border: 0;
+  background: transparent;
+
+  color: var(--sai-purple-dark);
+
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 500;
+
+  cursor: pointer;
+}
+
+.sai-link-btn:hover {
+  text-decoration: underline;
+}
+
+
+/* =========================================================
+   ROW CARDS
+   ========================================================= */
+
+.sai-row-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  min-height: 52px;
+
+  padding: 10px 12px;
+
+  margin-bottom: 8px;
+
+  background: #ffffff;
+
+  border: 1px solid #ededed;
+  border-radius: 10px;
+
+  box-shadow: var(--sai-shadow-soft);
+}
+
+.sai-row-title {
+  margin-bottom: 2px;
+
+  color: #292929;
+
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 600;
+}
+
+.sai-row-desc {
+  color: #808080;
+
+  font-size: 11px;
+  line-height: 16px;
+}
+
+.sai-row-time {
+  flex-shrink: 0;
+
+  margin-left: 12px;
+
+  color: #6d6d6d;
+
+  font-size: 10px;
+  line-height: 16px;
+}
+
+.sai-icon-btn {
+  width: 28px;
+  height: 28px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  border: 0;
+  border-radius: 6px;
+
+  background: transparent;
+
+  color: #999;
+
+  cursor: pointer;
+}
+
+.sai-icon-btn:hover {
+  background: #f5f5f5;
+}
+
+
+/* =========================================================
+   TIP BANNER
+   ========================================================= */
+
+.sai-tip-banner {
+  margin-top: 16px;
+  padding: 10px 12px;
+
+  border-radius: 10px;
+
+  background: #f0eeff;
+
+  box-shadow: var(--sai-shadow-soft);
+
+  color: #474747;
+
+  font-size: 12px;
+  line-height: 18px;
+}
+
+
+/* =========================================================
+   PROFILE
+   ========================================================= */
+
+.sai-profile-card {
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  margin-bottom: 14px;
+  padding: 10px 12px;
+
+  border: 1px solid #ededed;
+  border-radius: 10px;
+
+  background: #fcfcfc;
+}
+
+.sai-avatar {
+  width: 32px;
+  height: 32px;
+
+  flex: 0 0 32px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: rgba(216, 214, 255, 0.9);
+
+  color: #2017bd;
+
+  font-size: 14px;
+  font-weight: 600;
+}
+
+
+/* =========================================================
+   SETTINGS CARD
+   ========================================================= */
+
+.sai-settings-card {
+  padding: 14px;
+
+  margin-bottom: 12px;
+
+  background: #fcfcfc;
+
+  border: 1px solid #ededed;
+  border-radius: 10px;
+
+  box-shadow: var(--sai-shadow-soft);
+}
+
+.sai-setting-label {
+  margin: 4px 0 7px;
+
+  color: #292929;
+
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 600;
+}
+
+.sai-setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  padding: 9px 0;
+
+  font-size: 13px;
+  line-height: 18px;
+}
+
+
+/* =========================================================
+   TONE BUTTONS
+   ========================================================= */
+
+.sai-tone-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+
+  gap: 8px;
+
+  margin-bottom: 16px;
+}
+
+.sai-tone-btn {
+  min-height: 36px;
+
+  border: 1px solid #e7e7e7;
+  border-radius: 9px;
+
+  background: #ffffff;
+
+  color: #292929;
+
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+
+  cursor: pointer;
+}
+
+.sai-tone-btn.active {
+  background: #e5e3ff;
+  border-color: #d7d4ff;
+
+  color: #2017bd;
+  font-weight: 600;
+}
+
+
+/* =========================================================
+   SLIDERS
+   ========================================================= */
+
+.sai-slider-row {
+  margin-bottom: 16px;
+}
+
+.sai-slider-labels {
+  display: flex;
+  justify-content: space-between;
+
+  margin-bottom: 5px;
+
+  color: #878787;
+
+  font-size: 11px;
+  line-height: 16px;
+}
+
+.sai-slider {
+  width: 100%;
+  height: 4px;
+
+  margin: 0;
+
+  accent-color: #6c3dff;
+
+  cursor: pointer;
+}
+
+
+/* =========================================================
+   TAGS
+   ========================================================= */
+
+.sai-tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.sai-tag {
+  display: inline-flex;
+  align-items: center;
+
+  min-height: 30px;
+
+  padding: 5px 9px;
+
+  border: 1px solid #dedbff;
+  border-radius: 9px;
+
+  background: #e9e7ff;
+
+  color: #292929;
+
+  font-size: 11px;
+  line-height: 16px;
+}
+
+.sai-tag button {
+  width: 18px;
+  height: 18px;
+
+  margin-left: 4px;
+  padding: 0;
+
+  border: 0;
+  background: transparent;
+
+  color: #6d6d6d;
+
+  font-size: 14px;
+  line-height: 18px;
+
+  cursor: pointer;
+}
+
+.sai-tag-add {
+  border-color: #e4e4e4;
+
+  background: #f6f6f6;
+
+  cursor: pointer;
+}
+
+
+/* =========================================================
+   SELECT
+   ========================================================= */
+
+.sai-setting-row select {
+  min-width: 90px;
+  height: 32px;
+
+  padding: 0 9px;
+
+  border: 1px solid #dedede;
+  border-radius: 8px;
+
+  background: #ffffff;
+
+  color: #292929;
+
+  font-family: inherit;
+  font-size: 12px;
+}
+
+
+/* =========================================================
+   TOGGLE
+   ========================================================= */
+
+.sai-toggle {
+  position: relative;
+
+  width: 31px;
+  height: 18px;
+
+  flex: 0 0 31px;
+
+  cursor: pointer;
+}
+
+.sai-toggle input {
+  position: absolute;
+
+  width: 0;
+  height: 0;
+
+  opacity: 0;
+}
+
+.sai-toggle span {
+  position: absolute;
+  inset: 0;
+
+  border-radius: 999px;
+
+  background: #d8d8d8;
+
+  transition: background 0.15s ease;
+}
+
+.sai-toggle span::after {
+  content: "";
+
+  position: absolute;
+
+  top: 2px;
+  left: 2px;
+
+  width: 14px;
+  height: 14px;
+
+  border-radius: 50%;
+
+  background: #ffffff;
+
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+
+  transition: transform 0.15s ease;
+}
+
+.sai-toggle input:checked + span {
+  background: #6c3dff;
+}
+
+.sai-toggle input:checked + span::after {
+  transform: translateX(13px);
+}
+
+
+/* =========================================================
+   DANGER
+   ========================================================= */
+
+.sai-danger-btn {
+  width: 100%;
+  min-height: 38px;
+
+  margin-bottom: 12px;
+  padding: 8px 12px;
+
+  border: 1px solid #c70000;
+  border-radius: 10px;
+
+  background: #ffffff;
+
+  color: #c70000;
+
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition: background 0.15s ease;
+}
+
+.sai-danger-btn:hover {
+  background: #fff5f3;
+}
+
+
+/* =========================================================
+   SCROLLBAR
+   ========================================================= */
+
+.sai-sidebar {
+  scrollbar-width: thin;
+  scrollbar-color: #d6d6d6 transparent;
+}
+
+.sai-sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sai-sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sai-sidebar::-webkit-scrollbar-thumb {
+  background: #d6d6d6;
+  border-radius: 999px;
+}

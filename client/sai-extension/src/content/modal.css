@@ -1,0 +1,512 @@
+/* ========================================
+   SAI MODAL
+======================================== */
+
+.sai-modal-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 2147483647 !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  padding: 24px !important;
+  box-sizing: border-box !important;
+
+  background: rgba(0, 0, 0, 0.08) !important;
+
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "SF Pro Display",
+    "SF Pro Text",
+    "Noto Sans KR",
+    "Segoe UI",
+    sans-serif !important;
+}
+
+
+/* ========================================
+   MODAL CONTAINER
+======================================== */
+
+.sai-modal {
+  width: 520px !important;
+  max-width: calc(100vw - 48px) !important;
+  max-height: calc(100vh - 48px) !important;
+
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+
+  box-sizing: border-box !important;
+
+  padding: 28px !important;
+
+  background: #ffffff !important;
+
+  border-radius: 16px !important;
+
+  color: #292929 !important;
+
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.15) !important;
+}
+
+
+/* ========================================
+   HEADER
+======================================== */
+
+.sai-modal-header {
+  height: 36px !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+
+  margin: 0 0 24px !important;
+  padding: 0 !important;
+
+  border: 0 !important;
+}
+
+.sai-brand {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.sai-logo-img {
+  width: 28px !important;
+  height: 28px !important;
+
+  display: block !important;
+
+  object-fit: contain !important;
+}
+
+.sai-brand-text {
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+
+  color: #292929 !important;
+}
+
+.sai-close-btn {
+  width: 28px !important;
+  height: 28px !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  border: 0 !important;
+  border-radius: 6px !important;
+
+  background: transparent !important;
+
+  color: #292929 !important;
+
+  font-size: 22px !important;
+  font-weight: 300 !important;
+  line-height: 1 !important;
+
+  cursor: pointer !important;
+}
+
+.sai-close-btn:hover {
+  background: #f5f5f5 !important;
+}
+
+
+/* ========================================
+   SECTION
+======================================== */
+
+.sai-section {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.sai-section + .sai-section {
+  margin-top: 26px !important;
+}
+
+.sai-section h3 {
+  margin: 0 0 14px !important;
+  padding: 0 !important;
+
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  line-height: 1.4 !important;
+
+  color: #292929 !important;
+}
+
+.sai-label {
+  margin: 0 0 7px !important;
+  padding: 0 !important;
+
+  font-size: 13px !important;
+  font-weight: 400 !important;
+  line-height: 1.4 !important;
+
+  color: #737373 !important;
+}
+
+
+/* ========================================
+   TEXT BOX
+======================================== */
+
+.sai-box {
+  width: 100% !important;
+
+  display: block !important;
+
+  margin: 0 0 14px !important;
+  padding: 11px 13px !important;
+
+  box-sizing: border-box !important;
+
+  border-radius: 9px !important;
+
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  line-height: 1.45 !important;
+
+  word-break: break-word !important;
+}
+
+.sai-box-danger {
+  background: #fff4f1 !important;
+
+  border: 1px solid #f5c8c1 !important;
+
+  color: #292929 !important;
+}
+
+.sai-box-success {
+  background: #f5fff2 !important;
+
+  border: 1px solid #bddab5 !important;
+
+  color: #292929 !important;
+}
+
+
+/* ========================================
+   INFO TABLE
+======================================== */
+
+.sai-info-table {
+  width: 100% !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  box-sizing: border-box !important;
+
+  overflow: hidden !important;
+
+  border: 1px solid #d9d9d9 !important;
+  border-radius: 10px !important;
+
+  background: #ffffff !important;
+}
+
+.sai-info-row {
+  width: 100% !important;
+  min-height: 38px !important;
+
+  display: grid !important;
+  grid-template-columns: 42% 58% !important;
+  align-items: center !important;
+
+  box-sizing: border-box !important;
+
+  border-bottom: 1px solid #e5e5e5 !important;
+
+  font-size: 14px !important;
+  line-height: 1.4 !important;
+}
+
+.sai-info-row:last-child {
+  border-bottom: none !important;
+}
+
+.sai-info-row > div {
+  min-width: 0 !important;
+
+  box-sizing: border-box !important;
+
+  padding: 10px 13px !important;
+
+  font-size: 14px !important;
+  line-height: 1.4 !important;
+
+  word-break: break-word !important;
+}
+
+.sai-info-row > div:first-child {
+  color: #555555 !important;
+}
+
+.sai-info-row > div:last-child {
+  color: #474747 !important;
+}
+
+.sai-info-table.sai-table-muted {
+  background: #fafafa !important;
+}
+
+
+/* ========================================
+   URGENCY
+======================================== */
+
+.sai-urgent {
+  color: #d60000 !important;
+
+  font-weight: 700 !important;
+}
+
+
+/* ========================================
+   RISK MESSAGE
+======================================== */
+
+.sai-box-danger:has(⚠️) {
+  color: #555555 !important;
+}
+
+
+/* ========================================
+   COMPARE
+======================================== */
+
+.sai-section:last-child .sai-box {
+  margin-bottom: 12px !important;
+}
+
+.sai-section:last-child .sai-box-danger {
+  background: #fff3f0 !important;
+}
+
+.sai-section:last-child .sai-box-success {
+  background: #f5fff2 !important;
+}
+
+
+/* ========================================
+   CHANGES
+======================================== */
+
+.sai-changes {
+  width: 100% !important;
+
+  margin-top: 12px !important;
+  padding: 12px 14px !important;
+
+  box-sizing: border-box !important;
+
+  border: 1px solid #ededed !important;
+  border-radius: 10px !important;
+
+  background: #ffffff !important;
+
+  box-shadow:
+    0 2px 7px rgba(0, 0, 0, 0.08) !important;
+}
+
+.sai-changes-title {
+  margin: 0 0 8px !important;
+
+  font-size: 13px !important;
+  font-weight: 700 !important;
+
+  line-height: 1.4 !important;
+
+  color: #737373 !important;
+}
+
+.sai-change-item {
+  display: flex !important;
+  align-items: flex-start !important;
+
+  gap: 8px !important;
+
+  margin: 6px 0 0 !important;
+
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+
+  color: #474747 !important;
+}
+
+.sai-change-check {
+  flex: 0 0 auto !important;
+
+  color: #22a447 !important;
+
+  font-weight: 700 !important;
+}
+
+
+/* ========================================
+   SCROLLBAR
+======================================== */
+
+.sai-modal::-webkit-scrollbar {
+  width: 6px !important;
+}
+
+.sai-modal::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+
+.sai-modal::-webkit-scrollbar-thumb {
+  background: #d0d0d0 !important;
+  border-radius: 10px !important;
+}
+
+.sai-modal::-webkit-scrollbar-thumb:hover {
+  background: #b5b5b5 !important;
+}
+
+
+/* ========================================
+   MOBILE
+======================================== */
+
+@media (max-width: 600px) {
+  .sai-modal-overlay {
+    padding: 12px !important;
+  }
+
+  .sai-modal {
+    width: 100% !important;
+    max-width: none !important;
+
+    max-height: calc(100vh - 24px) !important;
+
+    padding: 28px !important;
+
+    border-radius: 14px !important;
+  }
+}
+
+/* ========================================
+   COMPARE SECTION
+======================================== */
+
+.sai-compare-section {
+  margin-top: 28px !important;
+}
+
+.sai-compare-box {
+  width: 100% !important;
+
+  box-sizing: border-box !important;
+
+  padding: 11px 13px !important;
+
+  border-radius: 9px !important;
+
+  font-size: 14px !important;
+  line-height: 1.45 !important;
+
+  word-break: break-word !important;
+}
+
+.sai-original {
+  background: #fff3f0 !important;
+
+  border: 1px solid #f5c8c1 !important;
+
+  color: #292929 !important;
+}
+
+.sai-improved {
+  background: #f5fff2 !important;
+
+  border: 1px solid #bddab5 !important;
+
+  color: #292929 !important;
+}
+
+.sai-arrow {
+  width: 100% !important;
+
+  margin: 8px 0 !important;
+
+  text-align: center !important;
+
+  color: #6c4cff !important;
+
+  font-size: 24px !important;
+  font-weight: 500 !important;
+  line-height: 1 !important;
+}
+
+
+/* ========================================
+   CHANGED PARTS
+======================================== */
+
+.sai-changes {
+  width: 100% !important;
+
+  box-sizing: border-box !important;
+
+  margin-top: 14px !important;
+  padding: 12px 14px !important;
+
+  border: 1px solid #e8e8e8 !important;
+  border-radius: 10px !important;
+
+  background: #ffffff !important;
+
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.08) !important;
+}
+
+.sai-changes-title {
+  margin: 0 0 8px !important;
+
+  color: #737373 !important;
+
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  line-height: 1.4 !important;
+}
+
+.sai-change-item {
+  display: flex !important;
+  align-items: flex-start !important;
+
+  gap: 8px !important;
+
+  margin: 6px 0 0 !important;
+  padding: 0 !important;
+
+  color: #474747 !important;
+
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+}
+
+.sai-change-check {
+  flex: 0 0 auto !important;
+
+  color: #22a447 !important;
+
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  line-height: 1.4 !important;
+}
