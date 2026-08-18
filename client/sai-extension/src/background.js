@@ -11,7 +11,7 @@ chrome.action.onClicked.addListener((tab) => {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.type === 'API_REQUEST') {
     const { path, options = {} } = request
-    const url = `http://localhost:8080${path}`
+    const url = `http://1.201.117.20:8080${path}`
 
     fetch(url, options)
       .then(async (res) => {
@@ -33,7 +33,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       .catch((err) => {
         sendResponse({
           success: false,
-          error: `백엔드 서버(http://localhost:8080)에 연결할 수 없습니다. 백엔드 서버가 실행 중인지 확인해 주세요. (${err.message})`,
+          error: `가비아 백엔드 서버(http://1.201.117.20:8080)에 연결할 수 없습니다. 서버가 실행 중인지 확인해 주세요. (${err.message})`,
         })
       })
 

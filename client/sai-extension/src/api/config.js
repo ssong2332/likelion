@@ -1,5 +1,5 @@
 // src/api/config.js
-export const API_BASE_URL = 'http://localhost:8080';
+export const API_BASE_URL = 'http://1.201.117.20:8080';
 
 export async function request(path, options = {}) {
   // 크롬 확장 프로그램 환경(Content Script 또는 SidePanel)에서는 Background Service Worker를 경유하여
