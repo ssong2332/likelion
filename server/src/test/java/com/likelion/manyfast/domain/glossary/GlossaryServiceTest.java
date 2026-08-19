@@ -13,6 +13,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
+import java.util.LinkedHashSet;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -62,6 +63,28 @@ class GlossaryServiceTest {
 
         assertThat(responses).extracting(GlossaryResponse::id).containsExactly(1L, 2L);
         verify(glossaryRepository).findAll(idAscending);
+    }
+
+    @Test
+    void findsOnlySelectedGlossariesByIdInRequestOrder() {
+        Glossary first = glossary(1L, "EOD", "End of Day", null);
+        Glossary third = glossary(3L, "TBD", "To Be Determined", null);
+        when(glossaryRepository.findAllById(any())).thenReturn(List.of(first, third));
+
+        List<GlossaryResponse> responses = glossaryService.findByIds(List.of(3L, 1L, 3L));
+
+        assertThat(responses).extracting(GlossaryResponse::id).containsExactly(3L, 1L);
+        verify(glossaryRepository).findAllById(new LinkedHashSet<>(List.of(3L, 1L)));
+    }
+
+    @Test
+    void rejectsMissingSelectedGlossaryId() {
+        Glossary existing = glossary(1L, "EOD", "End of Day", null);
+        when(glossaryRepository.findAllById(any())).thenReturn(List.of(existing));
+
+        assertThatThrownBy(() -> glossaryService.findByIds(List.of(1L, 999L)))
+                .isInstanceOf(GlossaryNotFoundException.class)
+                .hasMessage("Glossary not found: 999");
     }
 
     @Test

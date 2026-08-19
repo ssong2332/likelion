@@ -20,6 +20,6 @@ public class RefineRequestDto {
     private String senderTimezone = "Asia/Seoul";
     private String receiverTimezone = "America/New_York";
     private Map<String, Object> collaborationStyle;
-    private List<String> appliedGlossaryIds;
-    private List<String> appliedRuleIds;
+    private List<Long> appliedGlossaryIds;
+    private List<Long> appliedRuleIds;
 }

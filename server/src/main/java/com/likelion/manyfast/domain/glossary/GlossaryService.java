@@ -9,6 +9,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -32,6 +36,31 @@ public class GlossaryService {
     public List<GlossaryResponse> findAll() {
         return glossaryRepository.findAll(ID_ASC).stream()
                 .map(GlossaryResponse::from)
+                .toList();
+    }
+
+    public List<GlossaryResponse> findByIds(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return List.of();
+        }
+
+        LinkedHashSet<Long> uniqueIds = new LinkedHashSet<>();
+        for (Long id : ids) {
+            validateReferenceId(id);
+            uniqueIds.add(id);
+        }
+
+        Map<Long, Glossary> glossariesById = glossaryRepository.findAllById(uniqueIds).stream()
+                .collect(Collectors.toMap(Glossary::getId, Function.identity()));
+
+        return uniqueIds.stream()
+                .map(id -> {
+                    Glossary glossary = glossariesById.get(id);
+                    if (glossary == null) {
+                        throw new GlossaryNotFoundException(id);
+                    }
+                    return GlossaryResponse.from(glossary);
+                })
                 .toList();
     }
 
@@ -62,6 +91,15 @@ public class GlossaryService {
             return GlossaryResponse.from(glossaryRepository.saveAndFlush(glossary));
         } catch (DataIntegrityViolationException exception) {
             throw new DuplicateGlossaryTermException(glossary.getTerm(), exception);
+        }
+    }
+
+    private void validateReferenceId(Long id) {
+        if (id == null) {
+            throw new IllegalArgumentException("glossary id is required");
+        }
+        if (id <= 0) {
+            throw new IllegalArgumentException("glossary id must be positive");
         }
     }
 }

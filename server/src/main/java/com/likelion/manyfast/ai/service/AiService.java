@@ -6,6 +6,13 @@ import com.likelion.manyfast.ai.dto.RefineRequestDto;
 import com.likelion.manyfast.ai.dto.RefineResponseDto;
 import com.likelion.manyfast.ai.dto.ReplyDraftRequestDto;
 import com.likelion.manyfast.ai.dto.ReplyDraftResponseDto;
+import com.likelion.manyfast.domain.glossary.GlossaryService;
+import com.likelion.manyfast.domain.glossary.dto.GlossaryResponse;
+import com.likelion.manyfast.domain.rules.RuleService;
+import com.likelion.manyfast.domain.rules.dto.RuleResponse;
+import com.likelion.manyfast.domain.userstyle.CollaborationStyleService;
+import com.likelion.manyfast.domain.userstyle.dto.CollaborationStyleResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -14,7 +21,12 @@ import org.springframework.web.client.RestTemplate;
 import java.util.*;
 
 @Service
+@RequiredArgsConstructor
 public class AiService {
+
+    private final GlossaryService glossaryService;
+    private final RuleService ruleService;
+    private final CollaborationStyleService collaborationStyleService;
 
     @Value("${openai.api-key:}")
     private String apiKey;
@@ -32,72 +44,16 @@ public class AiService {
      * F-2, F-3, F-4.1, F-5, F-6: 도메인 데이터(용어집, 성향)를 동적 주입한 AI 교정
      */
     public RefineResponseDto refineMessage(RefineRequestDto request) {
+        RefineContext context = prepareRefineContext(request);
+
         if (apiKey != null && !apiKey.isBlank()) {
             try {
-                String targetLanguage = "en".equalsIgnoreCase(request.getTargetLang()) ? "English"
-                        : "zh".equalsIgnoreCase(request.getTargetLang()) ? "Chinese"
-                        : "ja".equalsIgnoreCase(request.getTargetLang()) ? "Japanese" : "English";
-
-                // Phase 5: 동적 프롬프트 조립 (성향 및 용어집 규칙)
-                String styleSection = buildStyleSection(request.getCollaborationStyle());
-                String glossarySection = buildGlossarySection(request.getAppliedGlossaryIds());
-
-                String systemPrompt = """
-                    You are 'Manyfast AI', an expert executive communication assistant for global business collaboration.
-                    Your goal is to refine raw, emotional, or vague business messages into clear, polite, and effective messages in %s without losing critical context.
-
-                    %s
-                    %s
-
-                    [CORE INSTRUCTIONS]
-                    1. FACT PRESERVATION: Extract the 5 core business facts from the user's message:
-                       - purpose: Main goal/task requested
-                       - assignee: Who is expected to act
-                       - deadline: Specific or relative deadline mentioned
-                       - urgency: One of ['low', 'normal', 'critical']
-                       - businessImpact: Risk or outcome if delayed
-                    2. REFINEMENT & TONE:
-                       - Transform blameful, emotional, or demanding tone (e.g., "안 봐주셔서", "빨리") into respectful, professional business language.
-                       - Preserve the urgency and deadline clearly without sounding hostile.
-                       - Strictly follow the Style Preferences and Glossary Rules designated above.
-                    3. BACK-TRANSLATION:
-                       - Provide a faithful Korean translation of your refinedText so the user can verify the meaning.
-                    4. RISKY EXPRESSIONS & WARNINGS:
-                       - Identify specific phrases that could cause misunderstanding or offense, explaining why and how they were replaced.
-                       - If a deadline or detail is vague, provide a helpful suggestion in 'missingInfoWarnings'.
-                    5. GLOSSARY MATCHING:
-                       - ONLY include items in 'appliedGlossary' IF the specific glossary term was explicitly present or mentioned in the user's original message.
-                       - If no registered glossary terms appear in the user's input, 'appliedGlossary' MUST be an empty array [].
-                    6. OUTPUT FORMAT:
-                       - Return ONLY a valid JSON object matching this structure:
-                       {
-                         "refinedText": "string",
-                         "backTranslation": "string",
-                         "extractedInfo": {
-                           "purpose": "string",
-                           "assignee": "string",
-                           "deadline": "string",
-                           "urgency": "string",
-                           "businessImpact": "string"
-                         },
-                         "missingInfoWarnings": [
-                           { "type": "string", "warning": "string", "suggestedCompletion": "string" }
-                         ],
-                         "riskyExpressions": [
-                           { "originalPhrase": "string", "reason": "string", "replacedWith": "string" }
-                         ],
-                         "appliedGlossary": [
-                           { "term": "string", "rule": "string", "matchedInRefined": true }
-                         ]
-                       }
-                    """.formatted(targetLanguage, styleSection, glossarySection);
-
                 Map<String, Object> payload = new HashMap<>();
                 payload.put("model", model);
                 payload.put("temperature", 0.7);
                 payload.put("response_format", Map.of("type", "json_object"));
                 payload.put("messages", List.of(
-                        Map.of("role", "system", "content", systemPrompt),
+                        Map.of("role", "system", "content", context.systemPrompt()),
                         Map.of("role", "user", "content", request.getOriginalText())
                 ));
 
@@ -131,9 +87,11 @@ public class AiService {
             }
         }
 
+        String fallbackRefinedText = "PR #142 is currently blocking today's release schedule. Could you please prioritize reviewing the Manyfast terminology and confirm your feedback by EOD?";
+
         // Mock Fallback matching API_CONTRACT.md
         return RefineResponseDto.builder()
-                .refinedText("PR #142 is currently blocking today's release schedule. Could you please prioritize reviewing the Manyfast terminology and confirm your feedback by EOD?")
+                .refinedText(fallbackRefinedText)
                 .backTranslation("PR #142가 현재 오늘의 배포 일정을 지연시키고 있습니다. Manyfast 용어를 확인해 주시고 오늘 EOD까지 피드백을 검토해 주시겠어요?")
                 .extractedInfo(Map.of(
                         "purpose", "PR 코드 리뷰 및 배포 블로커 해소",
@@ -152,11 +110,11 @@ public class AiService {
                         "reason", "상대방에 대한 직접적 비난으로 오해될 수 있음",
                         "replacedWith", "is currently blocking schedule"
                 )))
-                .appliedGlossary(List.of(Map.of(
-                        "term", "Manyfast",
-                        "rule", "원문 유지 (Keep Original)",
-                        "matchedInRefined", true
-                )))
+                .appliedGlossary(buildFallbackAppliedGlossary(
+                        request.getOriginalText(),
+                        fallbackRefinedText,
+                        context.glossaries()
+                ))
                 .build();
     }
 
@@ -243,61 +201,246 @@ public class AiService {
                 .build();
     }
 
-    /**
-     * Phase 5 Helper: 사용자 협업 성향 지시문 빌더
-     */
-    private String buildStyleSection(Map<String, Object> style) {
-        if (style == null || style.isEmpty()) {
-            return "[USER COLLABORATION STYLE]\n- Tone: Standard polite business English\n- Directness: Balanced";
+    RefineContext prepareRefineContext(RefineRequestDto request) {
+        List<GlossaryResponse> glossaries = glossaryService.findByIds(
+                safeIds(request.getAppliedGlossaryIds())
+        );
+        List<RuleResponse> rules = ruleService.findByIds(
+                safeIds(request.getAppliedRuleIds())
+        );
+        CollaborationStyleResponse savedStyle = collaborationStyleService.get();
+        CollaborationStyleResponse effectiveStyle = mergeCollaborationStyle(
+                savedStyle,
+                request.getCollaborationStyle()
+        );
+        String lengthLevel = overrideValue(
+                request.getCollaborationStyle(),
+                "lengthLevel",
+                "medium"
+        );
+
+        String systemPrompt = buildRefineSystemPrompt(
+                resolveTargetLanguage(request.getTargetLang()),
+                effectiveStyle,
+                lengthLevel,
+                glossaries,
+                rules
+        );
+        return new RefineContext(glossaries, rules, effectiveStyle, lengthLevel, systemPrompt);
+    }
+
+    private List<Long> safeIds(List<Long> ids) {
+        return ids == null ? List.of() : ids;
+    }
+
+    private CollaborationStyleResponse mergeCollaborationStyle(
+            CollaborationStyleResponse savedStyle,
+            Map<String, Object> override
+    ) {
+        CollaborationStyleResponse baseStyle = savedStyle != null
+                ? savedStyle
+                : new CollaborationStyleResponse("polite", "balanced", "concise");
+
+        return new CollaborationStyleResponse(
+                overrideValue(override, "tone", baseStyle.tone()),
+                overrideValue(override, "directness", baseStyle.directness()),
+                overrideValue(override, "detailLevel", baseStyle.detailLevel())
+        );
+    }
+
+    private String overrideValue(Map<String, Object> override, String key, String fallback) {
+        if (override == null || !override.containsKey(key) || override.get(key) == null) {
+            return fallback;
         }
-        String tone = String.valueOf(style.getOrDefault("tone", "polite"));
-        String directness = String.valueOf(style.getOrDefault("directness", "balanced"));
-        String detailLevel = String.valueOf(style.getOrDefault("detailLevel", "concise"));
-        String lengthLevel = String.valueOf(style.getOrDefault("lengthLevel", "medium"));
 
-        String toneInstruction = switch (tone) {
-            case "friendly" -> "CASUAL & WARM (친근체): Use warm greetings, friendly phrasing, soft and cheerful tone (e.g. 'Hey there!', 'Could we quickly check...', 'Hope you\\'re having a good week! 😊'). Avoid overly stiff corporate vocabulary.";
-            case "professional" -> "FORMAL & EXECUTIVE (전문 비즈니스체): Use authoritative, precise, and executive business language (e.g. 'I would like to propose a discussion regarding...', 'Please review at your earliest convenience'). No slang or emojis.";
-            default -> "POLITE & COURTEOUS (공손체): Use polite, respectful standard business English with courteous modal verbs (e.g. 'Would it be possible to...', 'I would appreciate it if...').";
+        String value = String.valueOf(override.get(key)).trim();
+        return value.isEmpty() ? fallback : value;
+    }
+
+    private String resolveTargetLanguage(String targetLang) {
+        if ("zh".equalsIgnoreCase(targetLang)) {
+            return "Chinese";
+        }
+        if ("ja".equalsIgnoreCase(targetLang)) {
+            return "Japanese";
+        }
+        return "English";
+    }
+
+    private String buildRefineSystemPrompt(
+            String targetLanguage,
+            CollaborationStyleResponse style,
+            String lengthLevel,
+            List<GlossaryResponse> glossaries,
+            List<RuleResponse> rules
+    ) {
+        return """
+            You are 'Manyfast AI', an expert executive communication assistant for global business collaboration.
+            Your goal is to refine raw, emotional, or vague business messages into clear, polite, and effective messages in %s without losing critical context.
+
+            %s
+            %s
+            %s
+
+            [CORE INSTRUCTIONS]
+            1. FACT PRESERVATION: Extract the 5 core business facts from the user's message:
+               - purpose: Main goal/task requested
+               - assignee: Who is expected to act
+               - deadline: Specific or relative deadline mentioned
+               - urgency: One of ['low', 'normal', 'critical']
+               - businessImpact: Risk or outcome if delayed
+            2. REFINEMENT & TONE:
+               - Transform blameful, emotional, or demanding tone into respectful, professional business language.
+               - Preserve the urgency and deadline clearly without sounding hostile.
+               - Strictly follow the resolved collaboration style, selected glossary entries, and selected communication rules above.
+            3. BACK-TRANSLATION:
+               - Provide a faithful Korean translation of your refinedText so the user can verify the meaning.
+            4. RISKY EXPRESSIONS & WARNINGS:
+               - Identify specific phrases that could cause misunderstanding or offense, explaining why and how they were replaced.
+               - If a deadline or detail is vague, provide a helpful suggestion in 'missingInfoWarnings'.
+            5. GLOSSARY MATCHING:
+               - ONLY include items in 'appliedGlossary' if they are listed in SELECTED GLOSSARY ENTRIES and the term appears in the original message.
+               - If no selected glossary terms appear in the input, 'appliedGlossary' MUST be an empty array [].
+            6. OUTPUT FORMAT:
+               - Return ONLY a valid JSON object matching this structure:
+               {
+                 "refinedText": "string",
+                 "backTranslation": "string",
+                 "extractedInfo": {
+                   "purpose": "string",
+                   "assignee": "string",
+                   "deadline": "string",
+                   "urgency": "string",
+                   "businessImpact": "string"
+                 },
+                 "missingInfoWarnings": [
+                   { "type": "string", "warning": "string", "suggestedCompletion": "string" }
+                 ],
+                 "riskyExpressions": [
+                   { "originalPhrase": "string", "reason": "string", "replacedWith": "string" }
+                 ],
+                 "appliedGlossary": [
+                   { "term": "string", "rule": "string", "matchedInRefined": true }
+                 ]
+               }
+            """.formatted(
+                targetLanguage,
+                buildStyleSection(style, lengthLevel),
+                buildGlossarySection(glossaries),
+                buildRuleSection(rules)
+        );
+    }
+
+    private String buildStyleSection(CollaborationStyleResponse style, String lengthLevel) {
+        String toneInstruction = switch (style.tone()) {
+            case "friendly" -> "CASUAL & WARM: Use warm greetings, friendly phrasing, and a soft, cheerful tone. Avoid overly stiff corporate vocabulary.";
+            case "professional" -> "FORMAL & EXECUTIVE: Use authoritative, precise executive business language. Do not use slang or emojis.";
+            default -> "POLITE & COURTEOUS: Use respectful standard business language with courteous modal verbs.";
         };
 
-        String directnessInstruction = switch (directness) {
-            case "direct" -> "DIRECT: State the action item and key ask directly in the very first sentence without beating around the bush.";
-            case "indirect" -> "INDIRECT: Cushion the request gently with polite preamble and buffer phrases to sound very considerate.";
-            default -> "BALANCED: Natural blend of clarity and politeness.";
+        String directnessInstruction = switch (style.directness()) {
+            case "direct" -> "DIRECT: State the action item and key ask in the first sentence.";
+            case "indirect" -> "INDIRECT: Cushion the request with a polite preamble and considerate buffer phrases.";
+            default -> "BALANCED: Use a natural blend of clarity and politeness.";
         };
 
-        String detailInstruction = switch (detailLevel) {
-            case "concise" -> "CONCISE: Keep it tightly focused on core facts, omitting unnecessary filler.";
+        String detailInstruction = switch (style.detailLevel()) {
+            case "concise" -> "CONCISE: Focus tightly on core facts and omit unnecessary filler.";
             case "detailed" -> "DETAILED: Provide background rationale, context, and clear next steps.";
-            default -> "MODERATE detail level.";
+            default -> "MODERATE: Include enough context to make the request actionable.";
         };
 
         String lengthInstruction = switch (lengthLevel) {
-            case "short" -> "SHORT: 1 compact sentence or 2 very short lines.";
+            case "short" -> "SHORT: Use one compact sentence or two very short lines.";
             case "long" -> "LONG: Elaborate thoroughly with complete context.";
-            default -> "STANDARD: 2-3 natural sentences.";
+            default -> "STANDARD: Use two or three natural sentences.";
         };
 
         return """
-            [USER COLLABORATION STYLE - STRICTLY DIFFERENTIATE OUTPUT BASED ON THIS]
-            - Tone Requirement: %s
-            - Directness Requirement: %s
-            - Detail Requirement: %s
-            - Length Requirement: %s
-            """.formatted(toneInstruction, directnessInstruction, detailInstruction, lengthInstruction);
+            [RESOLVED USER COLLABORATION STYLE]
+            - Tone: %s
+              Tone Instruction: %s
+            - Directness: %s
+              Directness Instruction: %s
+            - Detail Level: %s
+              Detail Instruction: %s
+            - Length Level: %s
+              Length Instruction: %s
+            """.formatted(
+                style.tone(),
+                toneInstruction,
+                style.directness(),
+                directnessInstruction,
+                style.detailLevel(),
+                detailInstruction,
+                lengthLevel,
+                lengthInstruction
+        );
     }
 
-    /**
-     * Phase 5 Helper: 용어집 규칙 지시문 빌더
-     */
-    private String buildGlossarySection(List<String> glossaryIds) {
-        // 기본 내장 용어집 규칙 (Manyfast 원문 유지, ASAP 시간 명시)
-        return """
-            [DESIGNATED GLOSSARY RULES]
-            - Term 'Manyfast': Keep original spelling unchanged (Do not translate).
-            - Term 'ASAP': Clarify with a concrete EOD / business hour timeframe.
-            - Term 'PR': Retain as 'Pull Request' or 'PR'.
-            """;
+    private String buildGlossarySection(List<GlossaryResponse> glossaries) {
+        if (glossaries.isEmpty()) {
+            return "[SELECTED GLOSSARY ENTRIES]\n- None selected.";
+        }
+
+        StringBuilder section = new StringBuilder("[SELECTED GLOSSARY ENTRIES]\n");
+        for (GlossaryResponse glossary : glossaries) {
+            section.append("- Term: ").append(glossary.term()).append('\n')
+                    .append("  Rule: ").append(glossary.rule()).append('\n')
+                    .append("  Note: ").append(
+                            glossary.note() == null || glossary.note().isBlank()
+                                    ? "(none)"
+                                    : glossary.note()
+                    ).append('\n');
+        }
+        return section.toString().stripTrailing();
+    }
+
+    private String buildRuleSection(List<RuleResponse> rules) {
+        if (rules.isEmpty()) {
+            return "[SELECTED COMMUNICATION RULES]\n- None selected.";
+        }
+
+        StringBuilder section = new StringBuilder("[SELECTED COMMUNICATION RULES]\n");
+        for (RuleResponse rule : rules) {
+            section.append("- Name: ").append(rule.name()).append('\n')
+                    .append("  Description: ").append(rule.description()).append('\n');
+        }
+        return section.toString().stripTrailing();
+    }
+
+    private List<Map<String, Object>> buildFallbackAppliedGlossary(
+            String originalText,
+            String refinedText,
+            List<GlossaryResponse> glossaries
+    ) {
+        if (originalText == null || originalText.isBlank()) {
+            return List.of();
+        }
+
+        String originalLower = originalText.toLowerCase(Locale.ROOT);
+        String refinedLower = refinedText.toLowerCase(Locale.ROOT);
+        return glossaries.stream()
+                .filter(glossary -> originalLower.contains(glossary.term().toLowerCase(Locale.ROOT)))
+                .map(glossary -> {
+                    Map<String, Object> applied = new LinkedHashMap<>();
+                    applied.put("term", glossary.term());
+                    applied.put("rule", glossary.rule());
+                    applied.put(
+                            "matchedInRefined",
+                            refinedLower.contains(glossary.term().toLowerCase(Locale.ROOT))
+                    );
+                    return applied;
+                })
+                .toList();
+    }
+
+    record RefineContext(
+            List<GlossaryResponse> glossaries,
+            List<RuleResponse> rules,
+            CollaborationStyleResponse collaborationStyle,
+            String lengthLevel,
+            String systemPrompt
+    ) {
     }
 }

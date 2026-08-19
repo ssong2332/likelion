@@ -112,7 +112,23 @@ class UserStyleControllerTest {
 
     @Test
     void rejectsUnsupportedDirectness() throws Exception {
-        assertBadRequest(Map.of("tone", "friendly", "directness", "indirect", "detailLevel", "detailed"));
+        assertBadRequest(Map.of("tone", "friendly", "directness", "sideways", "detailLevel", "detailed"));
+    }
+
+    @Test
+    void acceptsIndirectDirectness() throws Exception {
+        given(collaborationStyleService.update(any(CollaborationStyleRequest.class)))
+                .willReturn(new CollaborationStyleResponse("friendly", "indirect", "detailed"));
+
+        mockMvc.perform(put(ENDPOINT)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of(
+                                "tone", "friendly",
+                                "directness", "indirect",
+                                "detailLevel", "detailed"
+                        ))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.directness").value("indirect"));
     }
 
     @Test

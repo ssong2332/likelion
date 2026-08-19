@@ -19,10 +19,12 @@
     "directness": "balanced",
     "detailLevel": "concise"
   },
-  "appliedGlossaryIds": ["glossary_1"],
-  "appliedRuleIds": ["rule_1"]
+  "appliedGlossaryIds": [1],
+  "appliedRuleIds": [1]
 }
 ```
+
+`appliedGlossaryIds`와 `appliedRuleIds`는 각 CRUD API가 반환하는 MySQL `BIGINT` PK를 JSON number로 전달합니다.
 
 ### Response (200 OK)
 ```json

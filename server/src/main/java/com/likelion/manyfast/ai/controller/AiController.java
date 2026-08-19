@@ -5,7 +5,7 @@ import com.likelion.manyfast.ai.dto.RefineResponseDto;
 import com.likelion.manyfast.ai.dto.ReplyDraftRequestDto;
 import com.likelion.manyfast.ai.dto.ReplyDraftResponseDto;
 import com.likelion.manyfast.ai.service.AiService;
-import com.likelion.manyfast.domain.timezone.TimezoneService;
+import com.likelion.manyfast.ai.service.AnalyzeRefineService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,24 +16,14 @@ import org.springframework.web.bind.annotation.*;
 public class AiController {
 
     private final AiService aiService;
-    private final TimezoneService timezoneService;
-    private final com.likelion.manyfast.domain.history.MessageHistoryService messageHistoryService;
+    private final AnalyzeRefineService analyzeRefineService;
 
     @PostMapping("/analyze-refine")
     public ResponseEntity<RefineResponseDto> analyzeAndRefine(@RequestBody RefineRequestDto request) {
         if (request.getOriginalText() == null || request.getOriginalText().isBlank()) {
             throw new IllegalArgumentException("교정할 원문 메시지를 입력해 주세요.");
         }
-        RefineResponseDto response = aiService.refineMessage(request);
-        response.setTimezoneInfo(timezoneService.calculateTimezone(request.getSenderTimezone(), request.getReceiverTimezone()));
-        
-        try {
-            messageHistoryService.save(request.getOriginalText(), response.getRefinedText());
-        } catch (Exception e) {
-            System.err.println("Failed to save message history: " + e.getMessage());
-        }
-        
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(analyzeRefineService.analyzeAndRefine(request));
     }
 
     @PostMapping("/reply-draft")

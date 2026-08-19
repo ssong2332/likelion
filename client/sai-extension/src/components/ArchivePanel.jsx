@@ -4,10 +4,12 @@ import { getMessageHistory, deleteMessageHistoryItem, deleteAllMessageHistory } 
 export default function ArchivePanel({ active = true }) {
   const [subTab, setSubTab] = useState('all')
   const [entries, setEntries] = useState([])
+  const [totalCount, setTotalCount] = useState(0)
   const [retentionDays, setRetentionDays] = useState('30')
   const [archiveAlert, setArchiveAlert] = useState(true)
   const [autoDelete, setAutoDelete] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
+  const [loadError, setLoadError] = useState('')
 
   useEffect(() => {
     if (active) {
@@ -18,14 +20,20 @@ export default function ArchivePanel({ active = true }) {
   async function loadHistory() {
     try {
       setIsLoading(true)
+      setLoadError('')
       const res = await getMessageHistory()
-      if (res && res.history) {
-        setEntries(res.history)
-      } else {
-        setEntries([])
+
+      if (!Array.isArray(res?.history) || !Number.isInteger(res?.totalCount)) {
+        throw new Error('보관함 응답 형식이 올바르지 않습니다.')
       }
+
+      setEntries(res.history)
+      setTotalCount(res.totalCount)
     } catch (err) {
       console.warn('Failed to load message history:', err)
+      setEntries([])
+      setTotalCount(0)
+      setLoadError(err.message || '보관함을 불러오지 못했습니다.')
     } finally {
       setIsLoading(false)
     }
@@ -36,6 +44,7 @@ export default function ArchivePanel({ active = true }) {
       try {
         await deleteMessageHistoryItem(id)
         setEntries((prev) => prev.filter((item) => item.id !== id))
+        setTotalCount((prev) => Math.max(0, prev - 1))
       } catch (err) {
         alert('삭제 실패: ' + err.message)
       }
@@ -47,6 +56,7 @@ export default function ArchivePanel({ active = true }) {
       try {
         await deleteAllMessageHistory()
         setEntries([])
+        setTotalCount(0)
         alert('모든 데이터가 삭제되었습니다.')
       } catch (err) {
         alert('삭제 실패: ' + err.message)
@@ -56,7 +66,7 @@ export default function ArchivePanel({ active = true }) {
 
   return (
     <div>
-      <h3 className="sai-h3">저장한 문장</h3>
+      <h3 className="sai-h3">저장한 문장 ({totalCount})</h3>
       <div className="sai-sub-tabs">
         {['all', 'sentence', 'reply', 'summary'].map((t) => (
           <button
@@ -71,7 +81,13 @@ export default function ArchivePanel({ active = true }) {
 
       <div className="sai-list-section">
         {isLoading && <div style={{ padding: '12px', color: '#888', textAlign: 'center' }}>로딩 중...</div>}
-        {!isLoading && entries.length === 0 && (
+        {!isLoading && loadError && (
+          <div role="alert" style={{ padding: '20px', color: '#b42318', textAlign: 'center', fontSize: '13px' }}>
+            <div>{loadError}</div>
+            <button className="sai-link-btn" onClick={loadHistory} style={{ marginTop: '8px' }}>다시 시도</button>
+          </div>
+        )}
+        {!isLoading && !loadError && entries.length === 0 && (
           <div style={{ padding: '20px', color: '#888', textAlign: 'center', fontSize: '13px' }}>
             저장된 메시지 이력이 없습니다.
           </div>
@@ -81,12 +97,12 @@ export default function ArchivePanel({ active = true }) {
             <div style={{ flex: 1, marginRight: '8px' }}>
               <div className="sai-row-title" style={{ fontWeight: 600 }}>{entry.originalText}</div>
               <div className="sai-row-desc" style={{ color: 'var(--sai-primary, #4361ee)', marginTop: '4px' }}>
-                {entry.refinedText}
+                {entry.resultText}
               </div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
               <span className="sai-row-time" style={{ fontSize: '11px', color: '#aaa' }}>
-                {entry.createdAt ? new Date(entry.createdAt).toLocaleDateString() : ''}
+                {entry.createdAt ? new Date(entry.createdAt).toLocaleString() : ''}
               </span>
               <button className="sai-icon-btn" onClick={() => handleDeleteItem(entry.id)}>🗑</button>
             </div>

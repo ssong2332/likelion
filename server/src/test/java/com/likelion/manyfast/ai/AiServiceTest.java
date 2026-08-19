@@ -5,6 +5,10 @@ import com.likelion.manyfast.ai.dto.RefineResponseDto;
 import com.likelion.manyfast.ai.dto.ReplyDraftRequestDto;
 import com.likelion.manyfast.ai.dto.ReplyDraftResponseDto;
 import com.likelion.manyfast.ai.service.AiService;
+import com.likelion.manyfast.domain.glossary.GlossaryService;
+import com.likelion.manyfast.domain.rules.RuleService;
+import com.likelion.manyfast.domain.userstyle.CollaborationStyleService;
+import com.likelion.manyfast.domain.userstyle.dto.CollaborationStyleResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -13,6 +17,9 @@ import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class AiServiceTest {
 
@@ -20,7 +27,15 @@ class AiServiceTest {
 
     @BeforeEach
     void setUp() {
-        aiService = new AiService();
+        GlossaryService glossaryService = mock(GlossaryService.class);
+        RuleService ruleService = mock(RuleService.class);
+        CollaborationStyleService collaborationStyleService = mock(CollaborationStyleService.class);
+        when(glossaryService.findByIds(anyList())).thenReturn(List.of());
+        when(ruleService.findByIds(anyList())).thenReturn(List.of());
+        when(collaborationStyleService.get()).thenReturn(
+                new CollaborationStyleResponse("polite", "balanced", "concise")
+        );
+        aiService = new AiService(glossaryService, ruleService, collaborationStyleService);
     }
 
     @Test
@@ -30,7 +45,7 @@ class AiServiceTest {
                 .originalText("이거 리뷰 3일째 안 주셔서 배포 못 나갑니다")
                 .targetLang("en")
                 .collaborationStyle(Map.of("tone", "polite", "directness", "balanced"))
-                .appliedGlossaryIds(List.of("Manyfast", "ASAP"))
+                .appliedGlossaryIds(List.of(1L, 2L))
                 .build();
 
         RefineResponseDto response = aiService.refineMessage(request);

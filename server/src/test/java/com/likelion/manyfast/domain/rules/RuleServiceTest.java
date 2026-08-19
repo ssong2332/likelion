@@ -13,6 +13,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
+import java.util.LinkedHashSet;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -61,6 +62,28 @@ class RuleServiceTest {
 
         assertThat(responses).extracting(RuleResponse::id).containsExactly(1L, 2L);
         verify(ruleRepository).findAll(idAscending);
+    }
+
+    @Test
+    void findsOnlySelectedRulesByIdInRequestOrder() {
+        Rule first = rule(1L, "보고서 마감", "첫 번째 규칙");
+        Rule third = rule(3L, "회의록 공유", "세 번째 규칙");
+        when(ruleRepository.findAllById(any())).thenReturn(List.of(first, third));
+
+        List<RuleResponse> responses = ruleService.findByIds(List.of(3L, 1L, 3L));
+
+        assertThat(responses).extracting(RuleResponse::id).containsExactly(3L, 1L);
+        verify(ruleRepository).findAllById(new LinkedHashSet<>(List.of(3L, 1L)));
+    }
+
+    @Test
+    void rejectsMissingSelectedRuleId() {
+        Rule existing = rule(1L, "보고서 마감", "첫 번째 규칙");
+        when(ruleRepository.findAllById(any())).thenReturn(List.of(existing));
+
+        assertThatThrownBy(() -> ruleService.findByIds(List.of(1L, 999L)))
+                .isInstanceOf(RuleNotFoundException.class)
+                .hasMessage("Rule not found: 999");
     }
 
     @Test

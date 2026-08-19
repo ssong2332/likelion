@@ -1,12 +1,15 @@
 package com.likelion.manyfast.ai;
 
 import com.likelion.manyfast.ai.controller.AiController;
+import com.likelion.manyfast.ai.controller.AiExceptionHandler;
 import com.likelion.manyfast.ai.dto.RefineRequestDto;
 import com.likelion.manyfast.ai.dto.RefineResponseDto;
 import com.likelion.manyfast.ai.dto.ReplyDraftRequestDto;
 import com.likelion.manyfast.ai.dto.ReplyDraftResponseDto;
 import com.likelion.manyfast.ai.service.AiService;
-import com.likelion.manyfast.domain.timezone.TimezoneService;
+import com.likelion.manyfast.ai.service.AnalyzeRefineService;
+import com.likelion.manyfast.domain.glossary.GlossaryNotFoundException;
+import com.likelion.manyfast.domain.rules.RuleNotFoundException;
 import com.likelion.manyfast.global.exception.GlobalExceptionHandler;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -27,7 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(AiController.class)
-@Import(GlobalExceptionHandler.class)
+@Import({GlobalExceptionHandler.class, AiExceptionHandler.class})
 class AiControllerTest {
 
     @Autowired
@@ -37,7 +40,7 @@ class AiControllerTest {
     private AiService aiService;
 
     @MockBean
-    private TimezoneService timezoneService;
+    private AnalyzeRefineService analyzeRefineService;
 
     @Test
     @DisplayName("F-2/F-3: 유효한 원문 입력 시 200 OK 및 교정 결과 반환")
@@ -52,10 +55,11 @@ class AiControllerTest {
                         "urgency", "critical",
                         "businessImpact", "배포 일정 지연"
                 ))
+                .timezoneInfo(Map.of("isReceiverOffHours", true))
                 .build();
 
-        given(aiService.refineMessage(any(RefineRequestDto.class))).willReturn(mockResponse);
-        given(timezoneService.calculateTimezone(any(), any())).willReturn(Map.of("isReceiverOffHours", true));
+        given(analyzeRefineService.analyzeAndRefine(any(RefineRequestDto.class)))
+                .willReturn(mockResponse);
 
         mockMvc.perform(post("/api/ai/analyze-refine")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -85,6 +89,44 @@ class AiControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("BAD_REQUEST"))
                 .andExpect(jsonPath("$.message").value("교정할 원문 메시지를 입력해 주세요."));
+    }
+
+    @Test
+    @DisplayName("F-5: 선택한 Glossary ID가 없으면 404 Not Found 반환")
+    void analyzeAndRefine_missingGlossary_returns404() throws Exception {
+        given(analyzeRefineService.analyzeAndRefine(any(RefineRequestDto.class)))
+                .willThrow(new GlossaryNotFoundException(999L));
+
+        mockMvc.perform(post("/api/ai/analyze-refine")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "originalText": "EOD까지 확인해 주세요",
+                                  "appliedGlossaryIds": [999]
+                                }
+                                """))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("NOT_FOUND"))
+                .andExpect(jsonPath("$.message").value("Glossary not found: 999"));
+    }
+
+    @Test
+    @DisplayName("F-5: 선택한 Rule ID가 없으면 404 Not Found 반환")
+    void analyzeAndRefine_missingRule_returns404() throws Exception {
+        given(analyzeRefineService.analyzeAndRefine(any(RefineRequestDto.class)))
+                .willThrow(new RuleNotFoundException(999L));
+
+        mockMvc.perform(post("/api/ai/analyze-refine")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "originalText": "보고서를 확인해 주세요",
+                                  "appliedRuleIds": [999]
+                                }
+                                """))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("NOT_FOUND"))
+                .andExpect(jsonPath("$.message").value("Rule not found: 999"));
     }
 
     @Test
