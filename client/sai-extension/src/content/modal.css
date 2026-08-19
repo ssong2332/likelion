@@ -510,3 +510,132 @@
   font-weight: 700 !important;
   line-height: 1.4 !important;
 }
+
+/* =========================================================
+   COLLAPSIBLE SECTIONS
+   2. 상황 및 시간대 분석
+   3. 주요 정보
+   4. 원문 & 수정안 비교
+   ========================================================= */
+
+.sai-collapsible-section {
+  margin-bottom: 14px;
+}
+
+
+/* ---------------------------------------------------------
+   SECTION TOGGLE BUTTON
+   --------------------------------------------------------- */
+
+.sai-section-toggle {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin: 0;
+  padding: 4px 0;
+
+  border: 0;
+  border-radius: 6px;
+
+  background: transparent;
+
+  color: inherit;
+
+  font-family: inherit;
+  text-align: left;
+
+  cursor: pointer;
+}
+
+
+/* 기존 h3 스타일을 그대로 사용 */
+.sai-section-toggle h3 {
+  margin: 0;
+}
+
+
+/* ---------------------------------------------------------
+   PLUS / MINUS ICON
+   --------------------------------------------------------- */
+
+.sai-section-toggle-icon {
+  flex-shrink: 0;
+
+  width: 26px;
+  height: 26px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  margin-left: 10px;
+
+  border: 1px solid #dcdcdc;
+  border-radius: 50%;
+
+  background: #ffffff;
+
+  color: #555555;
+
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1;
+
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+
+.sai-section-toggle:hover .sai-section-toggle-icon {
+  background: #f5f5f5;
+  border-color: #cfcfcf;
+}
+
+
+/* ---------------------------------------------------------
+   OPENED CONTENT
+   --------------------------------------------------------- */
+
+.sai-section-content {
+  margin-top: 12px;
+}
+
+
+/* ---------------------------------------------------------
+   DARK MODE SAFETY
+   --------------------------------------------------------- */
+
+/*
+ * 웹사이트 자체의 다크모드 CSS가 SAI UI에 영향을 주는 것을
+ * 최대한 방지하기 위한 부분입니다.
+ */
+
+.sai-section-toggle,
+.sai-section-toggle h3 {
+  color: #292929;
+}
+
+.sai-section-toggle-icon {
+  color: #555555;
+  background: #ffffff;
+  border-color: #dcdcdc;
+}
+
+
+/* 다크모드 웹사이트에서도 토글 텍스트가 사라지지 않도록 */
+@media (prefers-color-scheme: dark) {
+  .sai-section-toggle,
+  .sai-section-toggle h3 {
+    color: #292929;
+  }
+
+  .sai-section-toggle-icon {
+    color: #555555;
+    background: #ffffff;
+    border-color: #dcdcdc;
+  }
+}

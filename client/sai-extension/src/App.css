@@ -443,6 +443,10 @@
   background: #fcfcfc;
 }
 
+.sai-link-btn {
+  margin-left: auto;
+}
+
 .sai-avatar {
   width: 32px;
   height: 32px;

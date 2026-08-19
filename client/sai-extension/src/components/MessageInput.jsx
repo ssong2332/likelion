@@ -10,7 +10,11 @@ function MessageInput({ value, onChange, onSubmit, isLoading }) {
         rows={4}
         style={{ width: '100%' }}
       />
-      <button onClick={onSubmit} disabled={isLoading}>
+      <button
+        onClick={onSubmit}
+        disabled={isLoading}
+        style={{ color: '#000000' }}
+      >
         {isLoading ? '교정 중...' : '교정하기'}
       </button>
     </div>
