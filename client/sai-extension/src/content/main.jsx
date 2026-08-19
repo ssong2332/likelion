@@ -2,6 +2,7 @@
 import { createRoot } from 'react-dom/client'
 import CorrectionModal from './Modal.jsx'
 import { analyzeRefine } from '../api/refine.js'
+import { getStorage } from '../utils/storage.js'
 import saiLogoPath from '../assets/sai-logo.png?url'
 
 const saiLogo = chrome.runtime?.getURL
@@ -39,18 +40,13 @@ function createToolbar(x, y, selectedText) {
       toolbarEl.innerHTML = `<img src="${saiLogo}" alt="SAI" style="height:16px;vertical-align:middle;" /> <span>교정 중...</span>`
       toolbarEl.style.pointerEvents = 'none'
 
-      let collaborationStyle = { tone: 'polite', directness: 'balanced', detailLevel: 'concise' }
-      try {
-        const saved = localStorage.getItem('sai_user_style')
-        if (saved) {
-          const parsed = JSON.parse(saved)
-          collaborationStyle = {
-            tone: parsed.tone || 'polite',
-            directness: parsed.directness || 'balanced',
-            detailLevel: parsed.detailLevel || 'concise',
-          }
-        }
-      } catch (_) {}
+      const savedStyle = await getStorage('sai_user_style')
+      const collaborationStyle = {
+        tone: savedStyle?.tone || 'polite',
+        directness: savedStyle?.directness || 'balanced',
+        detailLevel: savedStyle?.detailLevel || 'concise',
+        lengthLevel: savedStyle?.lengthLevel || 'medium',
+      }
 
       const result = await analyzeRefine({
         originalText: selectedText,

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { getUserStyle, updateUserStyle } from '../api/userstyle'
+import { getStorage, setStorage } from '../utils/storage'
 
 export default function ProfilePanel() {
   const [userName, setUserName] = useState('사용자')
@@ -14,32 +15,33 @@ export default function ProfilePanel() {
   const [isSaving, setIsSaving] = useState(false)
 
   useEffect(() => {
-    // 1. 프로필 정보 및 선호 표현 로컬 스토리지에서 로드
-    try {
-      const savedProfile = localStorage.getItem('sai_user_profile')
-      if (savedProfile) {
-        const parsed = JSON.parse(savedProfile)
-        if (parsed.name) setUserName(parsed.name)
-        if (parsed.team) setUserTeam(parsed.team)
-      }
-      const savedPhrases = localStorage.getItem('sai_user_phrases')
-      if (savedPhrases) {
-        setPhrases(JSON.parse(savedPhrases))
-      }
-      const savedStyle = localStorage.getItem('sai_user_style')
-      if (savedStyle) {
-        const parsed = JSON.parse(savedStyle)
-        if (parsed.tone) setTone(parsed.tone)
-        if (parsed.conciseness !== undefined) setConciseness(parsed.conciseness)
-        if (parsed.politeness !== undefined) setPoliteness(parsed.politeness)
-        if (parsed.length !== undefined) setLength(parsed.length)
-      }
-    } catch (_) {}
+    loadSavedData()
+  }, [])
 
-    // 2. 백엔드 DB에서 협업 스타일 로드
-    getUserStyle()
-      .then((res) => {
-        const data = res.data
+  async function loadSavedData() {
+    // 1. chrome.storage.local에서 우선 로드 (슬라이더 정확한 위치 보존)
+    const savedProfile = await getStorage('sai_user_profile')
+    if (savedProfile) {
+      if (savedProfile.name) setUserName(savedProfile.name)
+      if (savedProfile.team) setUserTeam(savedProfile.team)
+    }
+
+    const savedPhrases = await getStorage('sai_user_phrases')
+    if (savedPhrases && Array.isArray(savedPhrases)) {
+      setPhrases(savedPhrases)
+    }
+
+    const savedStyle = await getStorage('sai_user_style')
+    if (savedStyle) {
+      if (savedStyle.tone) setTone(savedStyle.tone)
+      if (savedStyle.conciseness !== undefined) setConciseness(savedStyle.conciseness)
+      if (savedStyle.politeness !== undefined) setPoliteness(savedStyle.politeness)
+      if (savedStyle.length !== undefined) setLength(savedStyle.length)
+    } else {
+      // 로컬에 없으면 서버 DB에서 로드
+      try {
+        const res = await getUserStyle()
+        const data = res?.data
         if (data) {
           if (data.tone) setTone(data.tone)
           if (data.directness === 'direct') setPoliteness(30)
@@ -50,57 +52,54 @@ export default function ProfilePanel() {
           else if (data.detailLevel === 'detailed') setConciseness(80)
           else setConciseness(50)
         }
-      })
-      .catch((err) => {
+      } catch (err) {
         console.warn('Could not load user style from server:', err)
-      })
-  }, [])
+      }
+    }
+  }
 
-  function handleSaveProfile() {
+  async function handleSaveProfile() {
     setIsEditingProfile(false)
-    try {
-      localStorage.setItem('sai_user_profile', JSON.stringify({ name: userName, team: userTeam }))
-    } catch (_) {}
+    await setStorage('sai_user_profile', { name: userName, team: userTeam })
   }
 
   async function handleToneChange(newTone) {
     setTone(newTone)
-    updateAndSaveStyle(newTone, conciseness, politeness, length)
+    await updateAndSaveStyle(newTone, conciseness, politeness, length)
   }
 
   async function handleConciseChange(newVal) {
     setConciseness(newVal)
-    updateAndSaveStyle(tone, newVal, politeness, length)
+    await updateAndSaveStyle(tone, newVal, politeness, length)
   }
 
   async function handlePoliteChange(newVal) {
     setPoliteness(newVal)
-    updateAndSaveStyle(tone, conciseness, newVal, length)
+    await updateAndSaveStyle(tone, conciseness, newVal, length)
   }
 
   async function handleLengthChange(newVal) {
     setLength(newVal)
-    updateAndSaveStyle(tone, conciseness, politeness, newVal)
+    await updateAndSaveStyle(tone, conciseness, politeness, newVal)
   }
 
   async function updateAndSaveStyle(t, c, p, l) {
     const directness = p < 40 ? 'direct' : p > 75 ? 'indirect' : 'balanced'
     const detailLevel = c < 40 ? 'concise' : c > 70 ? 'detailed' : 'moderate'
+    const lengthLevel = l < 40 ? 'short' : l > 70 ? 'long' : 'medium'
 
-    // 로컬 스토리지에 즉시 동기화
-    try {
-      localStorage.setItem(
-        'sai_user_style',
-        JSON.stringify({
-          tone: t,
-          conciseness: c,
-          politeness: p,
-          length: l,
-          directness,
-          detailLevel,
-        })
-      )
-    } catch (_) {}
+    const styleData = {
+      tone: t,
+      conciseness: c,
+      politeness: p,
+      length: l,
+      directness,
+      detailLevel,
+      lengthLevel,
+    }
+
+    // Chrome 전역 스토리지에 즉시 동기화 (사이드패널-웹페이지 공유)
+    await setStorage('sai_user_style', styleData)
 
     // 서버 DB에 동기화
     try {
@@ -117,22 +116,18 @@ export default function ProfilePanel() {
     }
   }
 
-  function removePhrase(p) {
+  async function removePhrase(p) {
     const next = phrases.filter((x) => x !== p)
     setPhrases(next)
-    try {
-      localStorage.setItem('sai_user_phrases', JSON.stringify(next))
-    } catch (_) {}
+    await setStorage('sai_user_phrases', next)
   }
 
-  function addPhrase() {
+  async function addPhrase() {
     const p = prompt('추가할 선호 표현을 입력하세요 (예: Thank you in advance)')
     if (p && p.trim()) {
       const next = [...phrases, p.trim()]
       setPhrases(next)
-      try {
-        localStorage.setItem('sai_user_phrases', JSON.stringify(next))
-      } catch (_) {}
+      await setStorage('sai_user_phrases', next)
     }
   }
 

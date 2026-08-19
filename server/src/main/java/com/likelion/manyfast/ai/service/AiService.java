@@ -248,15 +248,44 @@ public class AiService {
      */
     private String buildStyleSection(Map<String, Object> style) {
         if (style == null || style.isEmpty()) {
-            return "[USER COLLABORATION STYLE]\n- Tone: Polite and professional\n- Directness: Balanced";
+            return "[USER COLLABORATION STYLE]\n- Tone: Polite and professional\n- Directness: Balanced\n- Detail: Concise";
         }
         String tone = String.valueOf(style.getOrDefault("tone", "polite"));
         String directness = String.valueOf(style.getOrDefault("directness", "balanced"));
+        String detailLevel = String.valueOf(style.getOrDefault("detailLevel", "concise"));
+        String lengthLevel = String.valueOf(style.getOrDefault("lengthLevel", "medium"));
+
+        String toneInstruction = switch (tone) {
+            case "friendly" -> "Friendly, warm, and approachable (친근하고 부드러운 어조, 친절한 인사 포함)";
+            case "professional" -> "Highly professional, formal, and authoritative (격식 있고 명확한 전문 비즈니스 어조)";
+            default -> "Polite, respectful, and standard courteous business tone (정중하고 예의 바른 표준 비즈니스 어조)";
+        };
+
+        String directnessInstruction = switch (directness) {
+            case "direct" -> "Direct and upfront (용건을 서두에 명확하게 직설적으로 전달)";
+            case "indirect" -> "Soft and considerate (정중한 쿠션어와 배려하는 완곡 표현 사용)";
+            default -> "Balanced between direct and polite";
+        };
+
+        String detailInstruction = switch (detailLevel) {
+            case "concise" -> "Concise and brief (핵심만 군더더기 없이 요약)";
+            case "detailed" -> "Detailed with full context and clarity (배경과 맥락을 상세하게 설명)";
+            default -> "Moderate detail level";
+        };
+
+        String lengthInstruction = switch (lengthLevel) {
+            case "short" -> "Short (1-2 sentences)";
+            case "long" -> "Longer and more elaborated message";
+            default -> "Standard message length";
+        };
+
         return """
-            [USER COLLABORATION STYLE]
-            - Desired Tone: %s (Ensure the refinement reflects this tone)
-            - Directness Level: %s (Adjust how explicitly the request is stated)
-            """.formatted(tone, directness);
+            [USER COLLABORATION STYLE - STRICTLY APPLY TO REFINEMENT]
+            - Tone: %s
+            - Directness: %s
+            - Detail: %s
+            - Length: %s
+            """.formatted(toneInstruction, directnessInstruction, detailInstruction, lengthInstruction);
     }
 
     /**
