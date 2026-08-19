@@ -94,7 +94,7 @@ public class AiService {
 
                 Map<String, Object> payload = new HashMap<>();
                 payload.put("model", model);
-                payload.put("temperature", 0.3);
+                payload.put("temperature", 0.7);
                 payload.put("response_format", Map.of("type", "json_object"));
                 payload.put("messages", List.of(
                         Map.of("role", "system", "content", systemPrompt),
@@ -248,7 +248,7 @@ public class AiService {
      */
     private String buildStyleSection(Map<String, Object> style) {
         if (style == null || style.isEmpty()) {
-            return "[USER COLLABORATION STYLE]\n- Tone: Polite and professional\n- Directness: Balanced\n- Detail: Concise";
+            return "[USER COLLABORATION STYLE]\n- Tone: Standard polite business English\n- Directness: Balanced";
         }
         String tone = String.valueOf(style.getOrDefault("tone", "polite"));
         String directness = String.valueOf(style.getOrDefault("directness", "balanced"));
@@ -256,35 +256,35 @@ public class AiService {
         String lengthLevel = String.valueOf(style.getOrDefault("lengthLevel", "medium"));
 
         String toneInstruction = switch (tone) {
-            case "friendly" -> "Friendly, warm, and approachable (친근하고 부드러운 어조, 친절한 인사 포함)";
-            case "professional" -> "Highly professional, formal, and authoritative (격식 있고 명확한 전문 비즈니스 어조)";
-            default -> "Polite, respectful, and standard courteous business tone (정중하고 예의 바른 표준 비즈니스 어조)";
+            case "friendly" -> "CASUAL & WARM (친근체): Use warm greetings, friendly phrasing, soft and cheerful tone (e.g. 'Hey there!', 'Could we quickly check...', 'Hope you\\'re having a good week! 😊'). Avoid overly stiff corporate vocabulary.";
+            case "professional" -> "FORMAL & EXECUTIVE (전문 비즈니스체): Use authoritative, precise, and executive business language (e.g. 'I would like to propose a discussion regarding...', 'Please review at your earliest convenience'). No slang or emojis.";
+            default -> "POLITE & COURTEOUS (공손체): Use polite, respectful standard business English with courteous modal verbs (e.g. 'Would it be possible to...', 'I would appreciate it if...').";
         };
 
         String directnessInstruction = switch (directness) {
-            case "direct" -> "Direct and upfront (용건을 서두에 명확하게 직설적으로 전달)";
-            case "indirect" -> "Soft and considerate (정중한 쿠션어와 배려하는 완곡 표현 사용)";
-            default -> "Balanced between direct and polite";
+            case "direct" -> "DIRECT: State the action item and key ask directly in the very first sentence without beating around the bush.";
+            case "indirect" -> "INDIRECT: Cushion the request gently with polite preamble and buffer phrases to sound very considerate.";
+            default -> "BALANCED: Natural blend of clarity and politeness.";
         };
 
         String detailInstruction = switch (detailLevel) {
-            case "concise" -> "Concise and brief (핵심만 군더더기 없이 요약)";
-            case "detailed" -> "Detailed with full context and clarity (배경과 맥락을 상세하게 설명)";
-            default -> "Moderate detail level";
+            case "concise" -> "CONCISE: Keep it tightly focused on core facts, omitting unnecessary filler.";
+            case "detailed" -> "DETAILED: Provide background rationale, context, and clear next steps.";
+            default -> "MODERATE detail level.";
         };
 
         String lengthInstruction = switch (lengthLevel) {
-            case "short" -> "Short (1-2 sentences)";
-            case "long" -> "Longer and more elaborated message";
-            default -> "Standard message length";
+            case "short" -> "SHORT: 1 compact sentence or 2 very short lines.";
+            case "long" -> "LONG: Elaborate thoroughly with complete context.";
+            default -> "STANDARD: 2-3 natural sentences.";
         };
 
         return """
-            [USER COLLABORATION STYLE - STRICTLY APPLY TO REFINEMENT]
-            - Tone: %s
-            - Directness: %s
-            - Detail: %s
-            - Length: %s
+            [USER COLLABORATION STYLE - STRICTLY DIFFERENTIATE OUTPUT BASED ON THIS]
+            - Tone Requirement: %s
+            - Directness Requirement: %s
+            - Detail Requirement: %s
+            - Length Requirement: %s
             """.formatted(toneInstruction, directnessInstruction, detailInstruction, lengthInstruction);
     }
 
