@@ -26,6 +26,14 @@ export default function ProfilePanel() {
       if (savedPhrases) {
         setPhrases(JSON.parse(savedPhrases))
       }
+      const savedStyle = localStorage.getItem('sai_user_style')
+      if (savedStyle) {
+        const parsed = JSON.parse(savedStyle)
+        if (parsed.tone) setTone(parsed.tone)
+        if (parsed.conciseness !== undefined) setConciseness(parsed.conciseness)
+        if (parsed.politeness !== undefined) setPoliteness(parsed.politeness)
+        if (parsed.length !== undefined) setLength(parsed.length)
+      }
     } catch (_) {}
 
     // 2. 백엔드 DB에서 협업 스타일 로드
@@ -57,20 +65,48 @@ export default function ProfilePanel() {
 
   async function handleToneChange(newTone) {
     setTone(newTone)
-    saveStyleToServer(newTone, conciseness, politeness)
+    updateAndSaveStyle(newTone, conciseness, politeness, length)
   }
 
-  async function handleSliderRelease() {
-    saveStyleToServer(tone, conciseness, politeness)
+  async function handleConciseChange(newVal) {
+    setConciseness(newVal)
+    updateAndSaveStyle(tone, newVal, politeness, length)
   }
 
-  async function saveStyleToServer(currentTone, currentConcise, currentPolite) {
-    const directness = currentPolite < 40 ? 'direct' : currentPolite > 75 ? 'indirect' : 'balanced'
-    const detailLevel = currentConcise < 40 ? 'concise' : currentConcise > 70 ? 'detailed' : 'moderate'
+  async function handlePoliteChange(newVal) {
+    setPoliteness(newVal)
+    updateAndSaveStyle(tone, conciseness, newVal, length)
+  }
+
+  async function handleLengthChange(newVal) {
+    setLength(newVal)
+    updateAndSaveStyle(tone, conciseness, politeness, newVal)
+  }
+
+  async function updateAndSaveStyle(t, c, p, l) {
+    const directness = p < 40 ? 'direct' : p > 75 ? 'indirect' : 'balanced'
+    const detailLevel = c < 40 ? 'concise' : c > 70 ? 'detailed' : 'moderate'
+
+    // 로컬 스토리지에 즉시 동기화
+    try {
+      localStorage.setItem(
+        'sai_user_style',
+        JSON.stringify({
+          tone: t,
+          conciseness: c,
+          politeness: p,
+          length: l,
+          directness,
+          detailLevel,
+        })
+      )
+    } catch (_) {}
+
+    // 서버 DB에 동기화
     try {
       setIsSaving(true)
       await updateUserStyle({
-        tone: currentTone,
+        tone: t,
         directness,
         detailLevel,
       })
@@ -162,24 +198,21 @@ export default function ProfilePanel() {
           leftLabel="간결하게"
           rightLabel="자세하게"
           value={conciseness}
-          onChange={setConciseness}
-          onRelease={handleSliderRelease}
+          onChange={handleConciseChange}
         />
         <SliderRow
           label="정중할 정도"
           leftLabel="낮게"
           rightLabel="높게"
           value={politeness}
-          onChange={setPoliteness}
-          onRelease={handleSliderRelease}
+          onChange={handlePoliteChange}
         />
         <SliderRow
           label="문장 길이"
           leftLabel="짧게"
           rightLabel="길게"
           value={length}
-          onChange={setLength}
-          onRelease={handleSliderRelease}
+          onChange={handleLengthChange}
         />
 
         <div className="sai-setting-label" style={{ marginTop: '12px' }}>AI 자주 표현 선호</div>
@@ -198,7 +231,7 @@ export default function ProfilePanel() {
   )
 }
 
-function SliderRow({ label, leftLabel, rightLabel, value, onChange, onRelease }) {
+function SliderRow({ label, leftLabel, rightLabel, value, onChange }) {
   return (
     <div className="sai-slider-row">
       <div className="sai-setting-label">{label}</div>
@@ -212,8 +245,6 @@ function SliderRow({ label, leftLabel, rightLabel, value, onChange, onRelease })
         max="100"
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        onMouseUp={onRelease}
-        onTouchEnd={onRelease}
         className="sai-slider"
       />
     </div>

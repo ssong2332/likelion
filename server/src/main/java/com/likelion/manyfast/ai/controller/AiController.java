@@ -17,6 +17,7 @@ public class AiController {
 
     private final AiService aiService;
     private final TimezoneService timezoneService;
+    private final com.likelion.manyfast.domain.history.MessageHistoryService messageHistoryService;
 
     @PostMapping("/analyze-refine")
     public ResponseEntity<RefineResponseDto> analyzeAndRefine(@RequestBody RefineRequestDto request) {
@@ -25,6 +26,13 @@ public class AiController {
         }
         RefineResponseDto response = aiService.refineMessage(request);
         response.setTimezoneInfo(timezoneService.calculateTimezone(request.getSenderTimezone(), request.getReceiverTimezone()));
+        
+        try {
+            messageHistoryService.save(request.getOriginalText(), response.getRefinedText());
+        } catch (Exception e) {
+            System.err.println("Failed to save message history: " + e.getMessage());
+        }
+        
         return ResponseEntity.ok(response);
     }
 

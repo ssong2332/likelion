@@ -38,7 +38,24 @@ function createToolbar(x, y, selectedText) {
     try {
       toolbarEl.innerHTML = `<img src="${saiLogo}" alt="SAI" style="height:16px;vertical-align:middle;" /> <span>교정 중...</span>`
       toolbarEl.style.pointerEvents = 'none'
-      const result = await analyzeRefine({ originalText: selectedText })
+
+      let collaborationStyle = { tone: 'polite', directness: 'balanced', detailLevel: 'concise' }
+      try {
+        const saved = localStorage.getItem('sai_user_style')
+        if (saved) {
+          const parsed = JSON.parse(saved)
+          collaborationStyle = {
+            tone: parsed.tone || 'polite',
+            directness: parsed.directness || 'balanced',
+            detailLevel: parsed.detailLevel || 'concise',
+          }
+        }
+      } catch (_) {}
+
+      const result = await analyzeRefine({
+        originalText: selectedText,
+        collaborationStyle,
+      })
       removeToolbar()
       showModal(result, selectedText)
     } catch (err) {
