@@ -333,31 +333,31 @@ public class AiService {
 
     private String buildStyleSection(CollaborationStyleResponse style, String lengthLevel) {
         String toneInstruction = switch (style.tone()) {
-            case "friendly" -> "CASUAL & WARM: Use warm greetings, friendly phrasing, and a soft, cheerful tone. Avoid overly stiff corporate vocabulary.";
-            case "professional" -> "FORMAL & EXECUTIVE: Use authoritative, precise executive business language. Do not use slang or emojis.";
-            default -> "POLITE & COURTEOUS: Use respectful standard business language with courteous modal verbs.";
+            case "friendly" -> "CASUAL & WARM (친근체): Use warm greetings, friendly phrasing, soft and cheerful tone (e.g. 'Hey there!', 'Could we quickly check...', 'Hope you\\'re having a good week! 😊'). Avoid overly stiff corporate vocabulary.";
+            case "professional" -> "FORMAL & EXECUTIVE (전문 비즈니스체): Use authoritative, precise, and executive business language (e.g. 'Regarding the code review...', 'Please proceed with the deployment at your convenience.'). No slang or emojis.";
+            default -> "POLITE & COURTEOUS (공손체): Use polite, respectful standard business English with courteous modal verbs (e.g. 'Would it be possible to...', 'I would appreciate it if...').";
         };
 
         String directnessInstruction = switch (style.directness()) {
-            case "direct" -> "DIRECT: State the action item and key ask in the first sentence.";
-            case "indirect" -> "INDIRECT: Cushion the request with a polite preamble and considerate buffer phrases.";
-            default -> "BALANCED: Use a natural blend of clarity and politeness.";
+            case "direct" -> "DIRECT (직설적/명확): State the action item and conclusion immediately without introductory filler or unnecessary hedging.";
+            case "indirect" -> "INDIRECT (완곡/배려): Add polite cushioning phrases and considerate buffer expressions (e.g. 'I appreciate your patience...', 'Please feel free to proceed when convenient.').";
+            default -> "BALANCED: Natural blend of clarity and politeness.";
         };
 
         String detailInstruction = switch (style.detailLevel()) {
-            case "concise" -> "CONCISE: Focus tightly on core facts and omit unnecessary filler.";
-            case "detailed" -> "DETAILED: Provide background rationale, context, and clear next steps.";
-            default -> "MODERATE: Include enough context to make the request actionable.";
+            case "concise" -> "CONCISE (간결 요약): Only state the essential conclusion, omitting extra modifiers and background details.";
+            case "detailed" -> "DETAILED (상세 설명): Provide context, verification details, and clear follow-up reassurance.";
+            default -> "MODERATE detail level.";
         };
 
         String lengthInstruction = switch (lengthLevel) {
-            case "short" -> "SHORT: Use one compact sentence or two very short lines.";
-            case "long" -> "LONG: Elaborate thoroughly with complete context.";
-            default -> "STANDARD: Use two or three natural sentences.";
+            case "short" -> "EXTREMELY SHORT (짧음): Exactly 1 short, compact sentence (around 10-15 words). No extra fluff. Example: 'Code review is complete with no issues found; you may proceed with deployment.'";
+            case "long" -> "ELABORATED & LONG (길고 상세함): Elaborate thoroughly into 2-3 complete sentences with detailed context, reassurance, and polite next steps.";
+            default -> "STANDARD: 1-2 natural sentences.";
         };
 
         return """
-            [RESOLVED USER COLLABORATION STYLE]
+            [RESOLVED USER COLLABORATION STYLE - STRICTLY ENFORCE THESE CONTRASTS]
             - Tone: %s
               Tone Instruction: %s
             - Directness: %s
