@@ -11,7 +11,6 @@ export default function ProfilePanel() {
   const [conciseness, setConciseness] = useState(50)
   const [politeness, setPoliteness] = useState(70)
   const [length, setLength] = useState(50)
-  const [phrases, setPhrases] = useState(['Could you please', 'I would appreciate it', 'As soon as possible'])
   const [isSaving, setIsSaving] = useState(false)
 
   // Use refs to avoid stale closures in event handlers
@@ -32,10 +31,6 @@ export default function ProfilePanel() {
         if (savedProfile.team) setUserTeam(savedProfile.team)
       }
 
-      const savedPhrases = await getStorage('sai_user_phrases')
-      if (savedPhrases && Array.isArray(savedPhrases)) {
-        setPhrases(savedPhrases)
-      }
 
       const savedStyle = await getStorage('sai_user_style')
       if (savedStyle) {
@@ -106,20 +101,6 @@ export default function ProfilePanel() {
     setStorage('sai_user_profile', { name: userName, team: userTeam })
   }
 
-  async function removePhrase(p) {
-    const next = phrases.filter((x) => x !== p)
-    setPhrases(next)
-    await setStorage('sai_user_phrases', next)
-  }
-
-  async function addPhrase() {
-    const p = prompt('추가할 선호 표현을 입력하세요 (예: Thank you in advance)')
-    if (p && p.trim()) {
-      const next = [...phrases, p.trim()]
-      setPhrases(next)
-      await setStorage('sai_user_phrases', next)
-    }
-  }
 
   return (
     <div>
@@ -203,15 +184,7 @@ export default function ProfilePanel() {
           onRelease={(val) => persistStyle({ length: val })}
         />
 
-        <div className="sai-setting-label" style={{ marginTop: '12px' }}>AI 자주 표현 선호</div>
-        <div className="sai-tag-row">
-          {phrases.map((p) => (
-            <span key={p} className="sai-tag">
-              {p} <button onClick={() => removePhrase(p)}>×</button>
-            </span>
-          ))}
-          <button className="sai-tag sai-tag-add" onClick={addPhrase}>+ 표현 추가 &gt;</button>
-        </div>
+        
       </div>
 
       <div className="sai-tip-banner">내 성향에 맞는 표현으로 AI가 교정 및 제안을 제공합니다.</div>
