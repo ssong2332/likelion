@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { getUserStyle, updateUserStyle } from '../api/userstyle'
 import { getStorage, setStorage } from '../utils/storage'
 
@@ -8,38 +8,42 @@ export default function ProfilePanel() {
   const [isEditingProfile, setIsEditingProfile] = useState(false)
 
   const [tone, setTone] = useState('polite')
-  const [conciseness, setConciseness] = useState(30)
-  const [politeness, setPoliteness] = useState(85)
+  const [conciseness, setConciseness] = useState(50)
+  const [politeness, setPoliteness] = useState(70)
   const [length, setLength] = useState(50)
   const [phrases, setPhrases] = useState(['Could you please', 'I would appreciate it', 'As soon as possible'])
   const [isSaving, setIsSaving] = useState(false)
+
+  // Use refs to avoid stale closures in event handlers
+  const stateRef = useRef({ tone, conciseness, politeness, length })
+  useEffect(() => {
+    stateRef.current = { tone, conciseness, politeness, length }
+  }, [tone, conciseness, politeness, length])
 
   useEffect(() => {
     loadSavedData()
   }, [])
 
   async function loadSavedData() {
-    // 1. chrome.storage.local에서 우선 로드 (슬라이더 정확한 위치 보존)
-    const savedProfile = await getStorage('sai_user_profile')
-    if (savedProfile) {
-      if (savedProfile.name) setUserName(savedProfile.name)
-      if (savedProfile.team) setUserTeam(savedProfile.team)
-    }
+    try {
+      const savedProfile = await getStorage('sai_user_profile')
+      if (savedProfile) {
+        if (savedProfile.name) setUserName(savedProfile.name)
+        if (savedProfile.team) setUserTeam(savedProfile.team)
+      }
 
-    const savedPhrases = await getStorage('sai_user_phrases')
-    if (savedPhrases && Array.isArray(savedPhrases)) {
-      setPhrases(savedPhrases)
-    }
+      const savedPhrases = await getStorage('sai_user_phrases')
+      if (savedPhrases && Array.isArray(savedPhrases)) {
+        setPhrases(savedPhrases)
+      }
 
-    const savedStyle = await getStorage('sai_user_style')
-    if (savedStyle) {
-      if (savedStyle.tone) setTone(savedStyle.tone)
-      if (savedStyle.conciseness !== undefined) setConciseness(savedStyle.conciseness)
-      if (savedStyle.politeness !== undefined) setPoliteness(savedStyle.politeness)
-      if (savedStyle.length !== undefined) setLength(savedStyle.length)
-    } else {
-      // 로컬에 없으면 서버 DB에서 로드
-      try {
+      const savedStyle = await getStorage('sai_user_style')
+      if (savedStyle) {
+        if (savedStyle.tone) setTone(savedStyle.tone)
+        if (typeof savedStyle.conciseness === 'number') setConciseness(savedStyle.conciseness)
+        if (typeof savedStyle.politeness === 'number') setPoliteness(savedStyle.politeness)
+        if (typeof savedStyle.length === 'number') setLength(savedStyle.length)
+      } else {
         const res = await getUserStyle()
         const data = res?.data
         if (data) {
@@ -52,38 +56,16 @@ export default function ProfilePanel() {
           else if (data.detailLevel === 'detailed') setConciseness(80)
           else setConciseness(50)
         }
-      } catch (err) {
-        console.warn('Could not load user style from server:', err)
       }
+    } catch (err) {
+      console.warn('Failed to load profile data:', err)
     }
   }
 
-  async function handleSaveProfile() {
-    setIsEditingProfile(false)
-    await setStorage('sai_user_profile', { name: userName, team: userTeam })
-  }
+  async function persistStyle(overrideState = {}) {
+    const currentState = { ...stateRef.current, ...overrideState }
+    const { tone: t, conciseness: c, politeness: p, length: l } = currentState
 
-  async function handleToneChange(newTone) {
-    setTone(newTone)
-    await updateAndSaveStyle(newTone, conciseness, politeness, length)
-  }
-
-  async function handleConciseChange(newVal) {
-    setConciseness(newVal)
-    await updateAndSaveStyle(tone, newVal, politeness, length)
-  }
-
-  async function handlePoliteChange(newVal) {
-    setPoliteness(newVal)
-    await updateAndSaveStyle(tone, conciseness, newVal, length)
-  }
-
-  async function handleLengthChange(newVal) {
-    setLength(newVal)
-    await updateAndSaveStyle(tone, conciseness, politeness, newVal)
-  }
-
-  async function updateAndSaveStyle(t, c, p, l) {
     const directness = p < 40 ? 'direct' : p > 75 ? 'indirect' : 'balanced'
     const detailLevel = c < 40 ? 'concise' : c > 70 ? 'detailed' : 'moderate'
     const lengthLevel = l < 40 ? 'short' : l > 70 ? 'long' : 'medium'
@@ -98,10 +80,8 @@ export default function ProfilePanel() {
       lengthLevel,
     }
 
-    // Chrome 전역 스토리지에 즉시 동기화 (사이드패널-웹페이지 공유)
     await setStorage('sai_user_style', styleData)
 
-    // 서버 DB에 동기화
     try {
       setIsSaving(true)
       await updateUserStyle({
@@ -114,6 +94,16 @@ export default function ProfilePanel() {
     } finally {
       setIsSaving(false)
     }
+  }
+
+  async function handleToneChange(newTone) {
+    setTone(newTone)
+    await persistStyle({ tone: newTone })
+  }
+
+  function handleSaveProfile() {
+    setIsEditingProfile(false)
+    setStorage('sai_user_profile', { name: userName, team: userTeam })
   }
 
   async function removePhrase(p) {
@@ -193,21 +183,24 @@ export default function ProfilePanel() {
           leftLabel="간결하게"
           rightLabel="자세하게"
           value={conciseness}
-          onChange={handleConciseChange}
+          onChange={(val) => setConciseness(val)}
+          onRelease={(val) => persistStyle({ conciseness: val })}
         />
         <SliderRow
           label="정중할 정도"
           leftLabel="낮게"
           rightLabel="높게"
           value={politeness}
-          onChange={handlePoliteChange}
+          onChange={(val) => setPoliteness(val)}
+          onRelease={(val) => persistStyle({ politeness: val })}
         />
         <SliderRow
           label="문장 길이"
           leftLabel="짧게"
           rightLabel="길게"
           value={length}
-          onChange={handleLengthChange}
+          onChange={(val) => setLength(val)}
+          onRelease={(val) => persistStyle({ length: val })}
         />
 
         <div className="sai-setting-label" style={{ marginTop: '12px' }}>AI 자주 표현 선호</div>
@@ -226,7 +219,7 @@ export default function ProfilePanel() {
   )
 }
 
-function SliderRow({ label, leftLabel, rightLabel, value, onChange }) {
+function SliderRow({ label, leftLabel, rightLabel, value, onChange, onRelease }) {
   return (
     <div className="sai-slider-row">
       <div className="sai-setting-label">{label}</div>
@@ -240,6 +233,9 @@ function SliderRow({ label, leftLabel, rightLabel, value, onChange }) {
         max="100"
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
+        onPointerUp={(e) => onRelease?.(Number(e.target.value))}
+        onMouseUp={(e) => onRelease?.(Number(e.target.value))}
+        onTouchEnd={(e) => onRelease?.(Number(e.target.value))}
         className="sai-slider"
       />
     </div>

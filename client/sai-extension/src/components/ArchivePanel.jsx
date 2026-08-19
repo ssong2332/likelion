@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { getMessageHistory, deleteMessageHistoryItem, deleteAllMessageHistory } from '../api/history'
 
-export default function ArchivePanel() {
+export default function ArchivePanel({ active = true }) {
   const [subTab, setSubTab] = useState('all')
   const [entries, setEntries] = useState([])
   const [retentionDays, setRetentionDays] = useState('30')
@@ -10,8 +10,10 @@ export default function ArchivePanel() {
   const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
-    loadHistory()
-  }, [])
+    if (active) {
+      loadHistory()
+    }
+  }, [active])
 
   async function loadHistory() {
     try {

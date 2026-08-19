@@ -32,9 +32,15 @@ function App() {
       </nav>
 
       <div className="sai-sidebar-content">
-        {tab === 'home' && <SidebarHome />}
-        {tab === 'archive' && <ArchivePanel />}
-        {tab === 'profile' && <ProfilePanel />}
+        <div style={{ display: tab === 'home' ? 'block' : 'none' }}>
+          <SidebarHome active={tab === 'home'} />
+        </div>
+        <div style={{ display: tab === 'archive' ? 'block' : 'none' }}>
+          <ArchivePanel active={tab === 'archive'} />
+        </div>
+        <div style={{ display: tab === 'profile' ? 'block' : 'none' }}>
+          <ProfilePanel />
+        </div>
       </div>
     </div>
   )

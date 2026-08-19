@@ -3,7 +3,7 @@ import { getGlossaries, addGlossary, deleteGlossary } from '../api/glossary'
 import { getRules, addRule, deleteRule } from '../api/rules'
 import { getMessageHistory } from '../api/history'
 
-export default function SidebarHome() {
+export default function SidebarHome({ active = true }) {
   const [subTab, setSubTab] = useState('rules') // rules | glossary
   const [rules, setRules] = useState([])
   const [glossaries, setGlossaries] = useState([])
@@ -11,8 +11,10 @@ export default function SidebarHome() {
   const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
-    loadData()
-  }, [])
+    if (active) {
+      loadData()
+    }
+  }, [active])
 
   async function loadData() {
     setIsLoading(true)
