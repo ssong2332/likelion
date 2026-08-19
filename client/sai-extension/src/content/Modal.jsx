@@ -46,7 +46,7 @@ export default function CorrectionModal({
   }
   if (result.appliedGlossary && Array.isArray(result.appliedGlossary)) {
     result.appliedGlossary.forEach((g) => {
-      changeItems.push(`용어 사전 적용: ${g.term} (${g.meaning})`)
+      changeItems.push(`용어 사전 적용: ${g.term} (${g.meaning || g.rule || ''})`)
     })
   }
 
@@ -125,50 +125,13 @@ export default function CorrectionModal({
         {/* =========================
             2. 상황 및 시간대 분석
         ========================== */}
-<<<<<<< HEAD
         {result.timezoneInfo && (
           <section className="sai-section">
             <h3>2. 상황 및 시간대 분석</h3>
             <div className="sai-info-table">
-=======
-        <section className="sai-section">
-
-          <h3>
-            2. 상황 및 시간대 분석
-          </h3>
-
-          <div className="sai-info-table">
-
-            <div className="sai-info-row">
-              <div>상대방 시간</div>
-              <div>
-                {formatTime(result.timezoneInfo?.receiverLocalTime)} (현재 시간)
-              </div>
-            </div>
-
-            <div className="sai-info-row">
-              <div>업무 시간</div>
-              <div>
-                {result.timezoneInfo?.isReceiverOffHours
-                  ? '업무 시간 외'
-                  : '업무 시간'}
-              </div>
-            </div>
-
-            <div className="sai-info-row">
-              <div>추천 행동 시간</div>
-              <div>
-                {result.timezoneInfo?.nextAvailableCheckingTime
-                  ? formatTime(result.timezoneInfo.nextAvailableCheckingTime)
-                  : '지금 가능'}
-              </div>
-            </div>
-
-            {result.timezoneInfo?.receiverTimezone && (
->>>>>>> feat/fe/sai-extension
               <div className="sai-info-row">
                 <div>상대방 시간</div>
-                <div>{result.timezoneInfo.receiverLocalTime || '-'}</div>
+                <div>{formatTime(result.timezoneInfo.receiverLocalTime)} (현재 시간)</div>
               </div>
               <div className="sai-info-row">
                 <div>업무 시간</div>
@@ -181,7 +144,9 @@ export default function CorrectionModal({
               <div className="sai-info-row">
                 <div>추천 행동 시간</div>
                 <div>
-                  {result.timezoneInfo.nextAvailableCheckingTime ?? '지금 발송 권장'}
+                  {result.timezoneInfo.nextAvailableCheckingTime
+                    ? formatTime(result.timezoneInfo.nextAvailableCheckingTime)
+                    : '지금 발송 권장'}
                 </div>
               </div>
               {result.timezoneInfo.receiverTimezone && (
@@ -216,17 +181,6 @@ export default function CorrectionModal({
               <div>담당자</div>
               <div>{result.extractedInfo?.assignee || '-'}</div>
             </div>
-<<<<<<< HEAD
-=======
-
-                        <div className="sai-info-row">
-              <div>요청자</div>
-              <div>
-                {result.extractedInfo?.assignee}
-              </div>
-            </div>
-
->>>>>>> feat/fe/sai-extension
           </div>
 
           {result.missingInfoWarnings && result.missingInfoWarnings.length > 0 && (
