@@ -88,35 +88,29 @@ export default function CorrectionModal({
             <span>{originalText}</span>
           </div>
 
-          <p className="sai-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span>추천 개선 문장</span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '0 0 7px' }}>
+            <span className="sai-label" style={{ margin: 0 }}>추천 개선 문장</span>
             <button
+              type="button"
+              className="sai-copy-btn"
               onClick={handleCopy}
-              style={{
-                background: 'transparent',
-                border: '1px solid #4361ee',
-                color: '#4361ee',
-                borderRadius: '4px',
-                padding: '2px 8px',
-                fontSize: '11px',
-                cursor: 'pointer',
-              }}
             >
               복사
             </button>
-          </p>
+          </div>
+
           <div className="sai-box sai-box-success">
             <span className="sai-box-icon">✓</span>
             <span>{result.refinedText}</span>
           </div>
 
           {result.backTranslation && (
-            <>
-              <p className="sai-label" style={{ marginTop: '8px', color: '#666' }}>역번역 (한국어 검토)</p>
-              <div style={{ fontSize: '13px', color: '#555', padding: '6px 10px', background: '#f8f9fa', borderRadius: '6px' }}>
+            <div style={{ marginTop: '6px' }}>
+              <p className="sai-label" style={{ margin: '0 0 4px', color: '#737373' }}>역번역 (한국어 검토)</p>
+              <div style={{ fontSize: '13px', color: '#444444', padding: '8px 12px', background: '#f8f9fa', borderRadius: '8px', border: '1px solid #eaeaea', lineHeight: '1.4' }}>
                 {result.backTranslation}
               </div>
-            </>
+            </div>
           )}
         </section>
 

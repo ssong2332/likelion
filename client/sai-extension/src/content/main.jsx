@@ -21,23 +21,27 @@ function createToolbar(x, y, selectedText) {
   toolbarEl.style.position = 'absolute'
   toolbarEl.style.left = `${x}px`
   toolbarEl.style.top = `${y}px`
-  toolbarEl.style.zIndex = '999999'
-  toolbarEl.style.background = 'white'
-  toolbarEl.style.border = '1px solid #ccc'
+  toolbarEl.style.zIndex = '2147483647'
+  toolbarEl.style.background = '#ffffff'
+  toolbarEl.style.color = '#1e1e1e'
+  toolbarEl.style.border = '1px solid #dcdcdc'
   toolbarEl.style.borderRadius = '8px'
-  toolbarEl.style.padding = '6px 10px'
-  toolbarEl.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)'
+  toolbarEl.style.padding = '6px 12px'
+  toolbarEl.style.boxShadow = '0 4px 14px rgba(0,0,0,0.18)'
   toolbarEl.style.cursor = 'pointer'
   toolbarEl.style.fontSize = '13px'
+  toolbarEl.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
   toolbarEl.style.display = 'flex'
   toolbarEl.style.alignItems = 'center'
-  toolbarEl.style.gap = '6px'
-  toolbarEl.innerHTML = `<img src="${saiLogo}" alt="SAI" style="height:16px;vertical-align:middle;" /> <span>SAI 교정</span>`
+  toolbarEl.style.gap = '8px'
+  toolbarEl.style.lineHeight = '1'
+  toolbarEl.style.userSelect = 'none'
+  toolbarEl.innerHTML = `<img src="${saiLogo}" alt="SAI" style="height:16px;width:auto;vertical-align:middle;display:inline-block;" /> <span style="color:#1e1e1e !important;font-size:13px;font-weight:600;display:inline-block;letter-spacing:-0.2px;">SAI 교정</span>`
 
   toolbarEl.addEventListener('click', async (e) => {
     e.stopPropagation()
     try {
-      toolbarEl.innerHTML = `<img src="${saiLogo}" alt="SAI" style="height:16px;vertical-align:middle;" /> <span>교정 중...</span>`
+      toolbarEl.innerHTML = `<img src="${saiLogo}" alt="SAI" style="height:16px;width:auto;vertical-align:middle;display:inline-block;" /> <span style="color:#1e1e1e !important;font-size:13px;font-weight:600;display:inline-block;letter-spacing:-0.2px;">교정 중...</span>`
       toolbarEl.style.pointerEvents = 'none'
 
       const savedStyle = await getStorage('sai_user_style')

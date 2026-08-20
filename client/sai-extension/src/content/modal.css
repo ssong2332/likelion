@@ -606,6 +606,32 @@
 
 
 /* ---------------------------------------------------------
+   COPY BUTTON
+   --------------------------------------------------------- */
+
+.sai-copy-btn {
+  background: #ffffff !important;
+  border: 1.5px solid #4361ee !important;
+  color: #4361ee !important;
+  border-radius: 6px !important;
+  padding: 3px 10px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.15s ease !important;
+  font-family: inherit !important;
+}
+
+.sai-copy-btn:hover {
+  background: #4361ee !important;
+  color: #ffffff !important;
+}
+
+/* ---------------------------------------------------------
    DARK MODE SAFETY
    --------------------------------------------------------- */
 
@@ -614,28 +640,32 @@
  * 최대한 방지하기 위한 부분입니다.
  */
 
+.sai-modal,
+.sai-modal * {
+  box-sizing: border-box !important;
+}
+
 .sai-section-toggle,
 .sai-section-toggle h3 {
-  color: #292929;
+  color: #292929 !important;
 }
 
 .sai-section-toggle-icon {
-  color: #555555;
-  background: #ffffff;
-  border-color: #dcdcdc;
+  color: #555555 !important;
+  background: #ffffff !important;
+  border-color: #dcdcdc !important;
 }
 
-
-/* 다크모드 웹사이트에서도 토글 텍스트가 사라지지 않도록 */
+/* 다크모드 웹사이트에서도 텍스트가 사라지지 않도록 */
 @media (prefers-color-scheme: dark) {
   .sai-section-toggle,
   .sai-section-toggle h3 {
-    color: #292929;
+    color: #292929 !important;
   }
 
   .sai-section-toggle-icon {
-    color: #555555;
-    background: #ffffff;
-    border-color: #dcdcdc;
+    color: #555555 !important;
+    background: #ffffff !important;
+    border-color: #dcdcdc !important;
   }
 }
